@@ -1,0 +1,316 @@
+/* ========================================
+   FONTS
+======================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ========================================
+   ROOT VARIABLES
+======================================== */
+:root {
+    /*Font variables*/
+    --font-heading: 'Inter', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-size-body: 14px;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    --font-color-primary: #0F172B;
+    --font-color-secondary: #45556C;
+    --font-color-warning: #B45309;
+    --font-color-success: #007A55;
+    --font-color-danger: #C70036;
+
+    /*Color variables*/
+    --color-bg: #F8FAFC;
+    --color-surface: #ffffff;
+    --color-border: #e5e7eb;
+    --color-border-hover: #9aa7bd;
+    --color-primary: #009966;
+    --color-primary-hover: #007850;
+    --color-warning: #FEF3C7;
+    --color-success: #D0FAE5;
+    --color-danger: #C70036;
+
+    --border-color: #E2E8F0;
+
+    --color-tag-bg: #D0FAE5;
+    --font-color-tag: #007A55;
+
+    --border-radius-panel: 14px;
+    --border-radius-tag: 5rem;
+    --border-radius-search: 12px;
+}
+
+/* ========================================
+   RESET
+======================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ========================================
+   BASE
+======================================== */
+
+body {
+    font-size: var(--font-size-body);
+    font-family: var(--font-body);
+
+    background: var(--color-bg);
+    color: var(--font-color-primary);
+}
+
+main {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 2rem;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ========================================
+   TYPOGRAPHY
+======================================== */
+
+h1,
+h2,
+h3 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.025em;
+    color: var(--font-color-primary);
+}
+
+h1 {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+h2 {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+h3 {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.subheader {
+    font-size: 14px;
+    color: var(--font-color-secondary);
+}
+
+/* ========================================
+   HEADER
+======================================== */
+
+.main-header {
+    background: var(--color-surface);
+    color: white;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+/* ========================================
+   BUTTONS
+======================================== */
+
+.primary-button {
+    background-color: var(--color-primary);
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 5rem;
+}
+
+.primary-button:hover {
+    background-color: var(--color-primary-hover);
+    transition: ease-in 0.15s;
+    cursor: pointer;
+}
+
+/* ========================================
+   INGREDIENTS PANEL
+======================================== */
+#ingredients-panel {
+    background-color: var(--color-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-panel);
+    width: 380px;
+    /* Eller en fast bredd för att matcha designen bättre */
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    /* Ta bort padding härifrån... */
+    overflow: hidden;
+    /* ...och låt under-sektionerna styra det */
+}
+
+.panel-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.search-container {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#ingredient-search {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    padding-left: 2.75rem;
+    /* För att göra plats för en sökikon om du lägger till en */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-search);
+    background-color: var(--color-bg);
+    color: var(--font-color-primary);
+    font-family: var(--font-body);
+}
+
+#ingredient-search::placeholder {
+    color: var(--color-border-hover);
+}
+
+.panel-inner-section {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.panel-inner-section:last-of-type {
+    border-bottom: none;
+}
+
+.section-sub-header {
+    margin-bottom: 1rem;
+    color: var(--font-color-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Scrollbar för ingredienslistan */
+.scrollable-list {
+    max-height: 300px;
+    /* Justera denna höjd efter behov */
+    overflow-y: auto;
+}
+
+/* ========================================
+   INGREDIENTS LIST & TAG STYLES
+======================================== */
+#available-ingredients-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    /* Lite tätare mellan raderna nu när de har bakgrund */
+}
+
+/* Gör hela raden (labeln) till en klickbar yta */
+#available-ingredients-list label {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    /* Mer yta att klicka på */
+    font-size: 14px;
+    color: var(--font-color-primary);
+    cursor: pointer;
+    border-radius: 8px;
+    /* Snygga runda hörn på raden */
+    transition: background-color 0.15s ease;
+    /* Gör att färgskiftet sker mjukt */
+    background-color: transparent;
+}
+
+/* Hover-state: Ändra bakgrund från vit/transparent till ljusgrå */
+#available-ingredients-list label:hover {
+    background-color: #F1F5F9;
+}
+
+/* Göm undan själva den fula standard-kryssrutan helt */
+#available-ingredients-list input[type="checkbox"] {
+    display: none;
+}
+
+
+
+/* Valda ingredienser (Tags) */
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.ingredient-tag {
+    background-color: var(--color-tag-bg);
+    color: var(--font-color-tag);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 0.5rem 0.8rem;
+    border-radius: var(--border-radius-tag);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ingredient-tag button {
+    background: none;
+    border: none;
+    color: var(--font-color-tag);
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+/* Knapp: Clear all */
+.clear-all {
+    background: none;
+    border: none;
+    color: var(--font-color-success);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.clear-all:hover {
+    color: var(--color-primary-hover);
+}
+
+/* ========================================
+   RECIPE PANEL STYLES
+======================================== */
+.recipes-panel {
+    flex: 1;
+    background-color: var(--color-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-panel);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.recipes-header {
+    padding: 1rem;
+}
+
+#recipes-results-container {
+    padding: 1rem;
+}

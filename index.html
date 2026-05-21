@@ -10,14 +10,49 @@
 
 <body>
 
-    <h1>Vad finns i kylen? 🍳</h1>
-    <p>Bocka i dina ingredienser nedan.</p>
+    <header class="main-header">
+        <div class="header-inner">
+            <h1 class="main-header-text">Vad finns i kylen?</h1>
+            <button class="primary-button">Lägg till recept</button>
+        </div>
+    </header>
 
-    <div id="ingredienser-container"></div>
+    <main>
+        <section id="ingredients-panel">
+            <header class="panel-header">
+                <h3>Dina ingredienser</h3>
+                <p id="selection-subheader" class="subheader">0 ingredienser valda</p>
+            </header>
 
-    <button id="recept-knapp">Ge mig recept!</button>
+            <div class="search-container">
+                <input type="text" id="ingredient-search" placeholder="Search ingredients...">
+            </div>
 
-    <div id="resultat-container"></div>
+            <div id="selected-section" class="panel-inner-section hidden">
+                <header class="section-sub-header">
+                    <h2>SELECTED</h2>
+                    <button id="clear-all-button" class="clear-all">Clear all</button>
+                </header>
+                <div id="selected-ingredients-list" class="tag-list">
+                </div>
+            </div>
+
+            <div class="panel-inner-section scrollable-list">
+                <div id="available-ingredients-list">
+                </div>
+            </div>
+
+        </section>
+
+        <section id="recipes-section" class="recipes-panel">
+            <div class="recipes-header">
+                <h1 class="recipes-header-text">Tillgängliga recept</h1>
+                <p id="recipe-subheader" class="subheader">Visar X recept baserat på dina ingredienser</p>
+            </div>
+            <div id="recipes-results-container"></div>
+        </section>
+
+    </main>
 
     <script type="module" src="app.js"></script>
 </body>

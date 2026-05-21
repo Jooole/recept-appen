@@ -1,9 +1,9 @@
-const receptDatabas = [
+export const receptDatabas = [
     {
         id: "1",
         namn: "Pannkakor",
         tid: "mellan", // Snabbt, mellan eller tidskrävande
-        ingredienser: ["ägg", "mjölk", "mjöl"],
+        ingredienser: ["Ägg", "Mjölk", "Mjöl"],
         instruktioner: [
             "Vispa hälften av mjölken med mjölet till en slät smet.",
             "Vispa i resten av mjölken och äggen.",
@@ -15,7 +15,7 @@ const receptDatabas = [
         id: "2",
         namn: "Tomatpasta",
         tid: "snabbt",
-        ingredienser: ["pasta", "krossade tomater", "vitlök"],
+        ingredienser: ["Pasta", "Krossade tomater", "Vitlök"],
         instruktioner: [
             "Koka pastan enligt anvisningarna på förpackningen.",
             "Hacka vitlöken och fräs den mjuk i olivolja i en kastrull.",
