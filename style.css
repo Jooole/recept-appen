@@ -57,17 +57,24 @@
 body {
     font-size: var(--font-size-body);
     font-family: var(--font-body);
-
     background: var(--color-bg);
     color: var(--font-color-primary);
+
+    /* TA BORT height: 100vh och overflow: hidden! */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 main {
     display: flex;
     align-items: flex-start;
-    flex-wrap: wrap;
+    /* Ser till att panelen kramar sitt innehåll vertikalt */
+    flex-wrap: nowrap;
     gap: 20px;
     padding: 2rem;
+    flex: 1;
+    /* TA BORT min-height: 0 */
 }
 
 .hidden {
@@ -147,18 +154,23 @@ h3 {
 /* ========================================
    INGREDIENTS PANEL
 ======================================== */
+/* ========================================
+   INGREDIENTS PANEL (KRAMAR INNEHÅLLET)
+======================================== */
 #ingredients-panel {
     background-color: var(--color-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-panel);
     width: 380px;
-    /* Eller en fast bredd för att matcha designen bättre */
+    flex-shrink: 0;
+
+    /* 1. Sätt ett dynamiskt maxtak baserat på skärmen (minus paddingen) */
+    max-height: calc(100vh - 4rem);
+    align-self: flex-start;
+
+    /* 2. Gör panelen till en flex-container så barnen kan dela på höjden */
     display: flex;
     flex-direction: column;
-    padding: 0;
-    /* Ta bort padding härifrån... */
-    overflow: hidden;
-    /* ...och låt under-sektionerna styra det */
 }
 
 .panel-header {
@@ -171,29 +183,50 @@ h3 {
     border-bottom: 1px solid var(--border-color);
 }
 
+#selected-section {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
 #ingredient-search {
     width: 100%;
-    padding: 1rem 1.25rem;
+    padding: 0.75rem;
     padding-left: 2.75rem;
-    /* För att göra plats för en sökikon om du lägger till en */
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-search);
     background-color: var(--color-bg);
     color: var(--font-color-primary);
     font-family: var(--font-body);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239aa7bd'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 1rem center;
+    background-size: 1.25rem;
+    transition: border-color 0.15s ease;
+}
+
+#ingredient-search:focus {
+    outline: none;
+    border-color: var(--color-primary);
 }
 
 #ingredient-search::placeholder {
     color: var(--color-border-hover);
 }
 
-.panel-inner-section {
+/* Denna container ligger runt din ingredienslista i index.html */
+.panel-inner-section.scrollable-list {
     padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.panel-inner-section:last-of-type {
     border-bottom: none;
+
+    /* 3. Säg till denna sektion att ta upp ALLT utrymme som blir över,
+       men tvinga den att krympa (flex-shrink: 1) om skärmen tar slut */
+    flex: 1;
+    min-height: 0;
+    /* JÄTTEVIKTIG: Tillåter flex-boxen att bli mindre än sitt innehåll */
+
+    /* 4. Gör denna till en flexbox också så att listan inuti vet var den ska stoppa */
+    display: flex;
+    flex-direction: column;
 }
 
 .section-sub-header {
@@ -207,21 +240,18 @@ h3 {
     align-items: center;
 }
 
-/* Scrollbar för ingredienslistan */
-.scrollable-list {
-    max-height: 300px;
-    /* Justera denna höjd efter behov */
-    overflow-y: auto;
-}
-
 /* ========================================
    INGREDIENTS LIST & TAG STYLES
 ======================================== */
+/* Själva ingredienslistan som JavaScript bygger upp */
 #available-ingredients-list {
+    /* 5. Sätt scrollen direkt på den faktiska listan! */
+    overflow-y: auto;
+    min-height: 0;
+
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    /* Lite tätare mellan raderna nu när de har bakgrund */
 }
 
 /* Gör hela raden (labeln) till en klickbar yta */
@@ -297,11 +327,9 @@ h3 {
 /* ========================================
    RECIPE PANEL STYLES
 ======================================== */
+
 .recipes-panel {
     flex: 1;
-    background-color: var(--color-surface);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-panel);
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -313,4 +341,197 @@ h3 {
 
 #recipes-results-container {
     padding: 1rem;
+}
+
+.recept-kort {
+    background-color: var(--color-surface);
+}
+
+/* ========================================
+   RECEPTKORT
+======================================== */
+
+/* Behållare för hela recept-headern så att procentrutan hamnar till höger */
+.recept-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Själva procentrutan */
+.match-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    height: 40px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    border: 2px solid;
+    /* Tjockleken på din border */
+}
+
+/* Dynamiska färgklasser för rutan */
+.match-badge.gray-match {
+    border-color: #94A3B8;
+    color: #475569;
+    background-color: #F8FAFC;
+}
+
+.match-badge.yellow-match {
+    border-color: #f3bc60;
+    color: #ce722d;
+    background-color: #FEF3C7;
+}
+
+.match-badge.green-match {
+    border-color: #10B981;
+    color: #047857;
+    background-color: #D1FAE5;
+}
+
+.recept-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #F1F5F9;
+    /* En diskret linje ovanför footern */
+    display: flex;
+    align-items: center;
+}
+
+.tid-container {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    /* Avstånd mellan klockikonen och texten */
+    color: var(--font-color-secondary);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.tid-ikon {
+    width: 16px;
+    height: 16px;
+    stroke: var(--font-color-secondary);
+    /* Gör att ikonen får samma färg som texten */
+}
+
+.saknade-container {
+    margin: 0.75rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    /* Avstånd mellan brickorna */
+}
+
+.saknade-titel {
+    font-size: 13px;
+    font-weight: 600;
+    color: #94A3B8;
+    /* En dämpad grå färg för själva rubriken "SAKNAS:" */
+    letter-spacing: 0.03em;
+    margin-right: 0.25rem;
+}
+
+.saknad-badge {
+    background-color: #FEE2E2;
+    /* Mjuk ljusröd bakgrund */
+    color: #991B1B;
+    /* Mörkröd text för god kontrast och läsbarhet */
+    font-size: 12px;
+    font-weight: 500;
+    padding: 0.15rem 0.65rem;
+    border-radius: 16px;
+    /* Lite skarpare hörn än ingrediens-tagsen för att skilja dem åt */
+    border: 1px solid #FCA5A5;
+    /* En subtil ram runt */
+}
+
+/* ========================================
+   MODAL (POPUP) STYLER
+======================================== */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    /* Ligger ovanför allt annat */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 43, 0.5);
+    /* Mörk halvtransparent bakgrund */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: var(--color-surface);
+    padding: 2rem;
+    border-radius: 14px;
+    width: 500px;
+    max-width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    /* Scrolla inuti om formuläret blir långt */
+    position: relative;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.close-button {
+    position: absolute;
+    right: 1.5rem;
+    top: 1rem;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--font-color-secondary);
+}
+
+.close-button:hover {
+    color: var(--font-color-primary);
+}
+
+/* Formulär-stajling */
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 13px;
+}
+
+.form-group input[type="text"],
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-body);
+}
+
+.secondary-button {
+    background: none;
+    border: 1px dashed var(--color-primary);
+    color: var(--color-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.secondary-button:hover {
+    background-color: var(--color-success);
+}
+
+.save-recipe-btn {
+    width: 100%;
+    margin-top: 1rem;
 }

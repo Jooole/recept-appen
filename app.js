@@ -8,9 +8,21 @@ const selectedIngredientsList = document.getElementById('selected-ingredients-li
 const clearAllButton = document.getElementById('clear-all-button');
 const recipeSubheader = document.getElementById('recipe-subheader');
 const recipesResultsContainer = document.getElementById('recipes-results-container');
+const ingredientSearch = document.getElementById('ingredient-search');
+
+// Modal-element
+const openModalBtn = document.querySelector('.primary-button'); // Knappen i headern
+const recipeModal = document.getElementById('recipe-modal');
+const closeModalBtn = document.getElementById('close-modal');
+const recipeForm = document.getElementById('recipe-form');
+const formIngredientsList = document.getElementById('form-ingredients-list');
+const formStepsList = document.getElementById('form-steps-list');
+const addFormIngredientBtn = document.getElementById('add-form-ingredient');
+const addFormStepBtn = document.getElementById('add-form-step');
 
 // --- TILLSTÅND (STATE) ---
 let valdaIngredienser = [];
+let sokord = '';
 
 // --- FUNKTIONER ---
 
@@ -30,13 +42,19 @@ function hamtaUnikaIngredienser() {
 // 2. Skapa klickbara rader för ingredienserna (Uppdaterad)
 function ritaUtAvailableIngredienser() {
     const unikaIngredienser = hamtaUnikaIngredienser();
-
-    // Filtrera så att vi bara behåller ingredienser som INTE finns i valdaIngredienser
-    const tillgangligaIngredienser = unikaIngredienser.filter(ingrediens => 
+    
+    // 1. Filtrera bort ingredienser som redan är valda
+    let tillgangligaIngredienser = unikaIngredienser.filter(ingrediens => 
         !valdaIngredienser.includes(ingrediens)
     );
 
-    availableIngredientsList.innerHTML = '';
+    // 2. NYTT: Filtrera baserat på vad man skrivit i sökfältet
+    // .toLowerCase() gör att sökningen inte bryr sig om stora/små bokstäver
+    tillgangligaIngredienser = tillgangligaIngredienser.filter(ingrediens => 
+        ingrediens.toLowerCase().includes(sokord.toLowerCase())
+    );
+
+    availableIngredientsList.innerHTML = ''; // Töm listan
 
     // Loopa igenom tillgangligaIngredienser istället för unikaIngredienser
     tillgangligaIngredienser.forEach(ingrediens => {
@@ -68,6 +86,10 @@ function ritaUtAvailableIngredienser() {
 
 // 3. Hantera när användaren klickar på en ingrediensrad (Uppdaterad)
 function hanteraKlickRad(ingrediensName) {
+    // Nollställ sökningen DIREKT när man klickar på en rad
+    sokord = '';
+    ingredientSearch.value = '';
+
     // Kolla om ingrediensen redan finns i listan över valda
     const index = valdaIngredienser.indexOf(ingrediensName);
 
@@ -180,34 +202,63 @@ function uppdateraReceptLista() {
 
     bearbetadeRecept.forEach(recept => {
         const receptKort = document.createElement('div');
-        receptKort.className = 'recept-kort'; // Du kan styla detta i CSS sen!
+        receptKort.className = 'recept-kort';
         receptKort.style.marginBottom = '1.5rem';
-        receptKort.style.padding = '1rem';
+        receptKort.style.padding = '1.5rem';
         receptKort.style.border = '1px solid #E2E8F0';
-        receptKort.style.borderRadius = '8px';
+        receptKort.style.borderRadius = '12px';
+        receptKort.style.backgroundColor = 'white';
 
-        // Skapa rubrik med procent
-        const rubrik = document.createElement('h2');
-        rubrik.textContent = `${recept.namn} - ${recept.matchningsProcent}% matchning`;
-        receptKort.appendChild(rubrik);
-
-        // Visa tidskategori
-        const tidInfo = document.createElement('p');
-        tidInfo.className = 'subheader';
-        tidInfo.textContent = `Tid: ${recept.tid}`;
-        receptKort.appendChild(tidInfo);
-
-        // Visa saknade ingredienser om det finns några (och om man har valt något överhuvudtaget)
-        if (recept.matchningsProcent < 100 && valdaIngredienser.length > 0) {
-            const saknasText = document.createElement('p');
-            saknasText.style.color = 'var(--font-color-danger)';
-            saknasText.style.fontSize = '12px';
-            saknasText.style.margin = '0.5rem 0';
-            saknasText.textContent = `Du saknar: ${recept.saknadeIngredienser.join(', ')}`;
-            receptKort.appendChild(saknasText);
+        // 1. Bestäm färgklass baserat på procent
+        let färgKlass = 'gray-match';
+        if (recept.matchningsProcent >= 75) {
+            färgKlass = 'green-match';
+        } else if (recept.matchningsProcent >= 50) {
+            färgKlass = 'yellow-match';
         }
 
-        // Skapa den stegvisa instruktionslistan
+        // 2. Flex-behållare för rubrik och procentruta (Tidsinfon borttagen härifrån!)
+        const headerFlex = document.createElement('div');
+        headerFlex.className = 'recept-header-flex';
+
+        const titelInfoDiv = document.createElement('div');
+        const rubrik = document.createElement('h1'); 
+        rubrik.textContent = recept.namn;
+        titelInfoDiv.appendChild(rubrik);
+
+        const procentBadge = document.createElement('div');
+        procentBadge.className = `match-badge ${färgKlass}`;
+        procentBadge.textContent = `${recept.matchningsProcent}%`;
+
+        headerFlex.appendChild(titelInfoDiv);
+        headerFlex.appendChild(procentBadge);
+        receptKort.appendChild(headerFlex);
+
+        // 3. Visa saknade ingredienser om det behövs
+        if (recept.matchningsProcent < 100 && valdaIngredienser.length > 0) {
+            // Skapa huvudbehållaren för hela raden
+            const saknadeContainer = document.createElement('div');
+            saknadeContainer.className = 'saknade-container';
+
+            // Skapa texten "Saknas:"
+            const saknadeTitel = document.createElement('span');
+            saknadeTitel.className = 'saknade-titel';
+            saknadeTitel.textContent = 'Saknas:';
+            saknadeContainer.appendChild(saknadeTitel);
+
+            // Loopa igenom varje saknad ingrediens och skapa en egen badge
+            recept.saknadeIngredienser.forEach(ingrediens => {
+                const badge = document.createElement('span');
+                badge.className = 'saknad-badge';
+                badge.textContent = ingrediens;
+                saknadeContainer.appendChild(badge);
+            });
+
+            // Lägg till hela härligheten i receptkortet
+            receptKort.appendChild(saknadeContainer);
+        }
+
+        // 4. Skapa den stegvisa instruktionslistan
         const ol = document.createElement('ol');
         ol.style.paddingLeft = '1.25rem';
         ol.style.marginTop = '0.5rem';
@@ -218,9 +269,116 @@ function uppdateraReceptLista() {
         });
         receptKort.appendChild(ol);
 
+        // 5. NYTT: Skapa en Footer för kortet med klockikon och tid
+        const footer = document.createElement('footer');
+        footer.className = 'recept-footer';
+
+        const tidContainer = document.createElement('div');
+        tidContainer.className = 'tid-container';
+
+        // Här ritar vi upp en stilren klockikon via SVG
+        tidContainer.innerHTML = `
+            <svg class="tid-ikon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin='round' stroke-width='2' d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+            </svg>
+            <span>${recept.tid}</span>
+        `;
+
+        footer.appendChild(tidContainer);
+        receptKort.appendChild(footer); // Lägg till footern absolut längst ner på kortet
+
         recipesResultsContainer.appendChild(receptKort);
     });
 }
+
+// 7. Lyssna på sökfältet (Körs varje gång användaren trycker på en tangent)
+ingredientSearch.addEventListener('input', (e) => {
+    sokord = e.target.value; // Uppdatera vårt sökord-tillstånd med texten från fältet
+    ritaUtAvailableIngredienser(); // Rita om listan direkt!
+});
+
+// ========================================
+// MODAL & FORMULÄR-LOGIK
+// ========================================
+
+// Öppna modalen
+openModalBtn.addEventListener('click', () => {
+    recipeModal.classList.remove('hidden');
+});
+
+// Stäng modalen via krysset
+closeModalBtn.addEventListener('click', () => {
+    recipeModal.classList.add('hidden');
+});
+
+// Stäng modalen om man klickar utanför fönstret
+window.addEventListener('click', (e) => {
+    if (e.target === recipeModal) {
+        recipeModal.classList.add('hidden');
+    }
+});
+
+// Lägg till nytt ingrediensfält i formuläret
+addFormIngredientBtn.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-ingredient-input';
+    input.placeholder = 'T.ex. Mjölk';
+    formIngredientsList.appendChild(input);
+});
+
+// Lägg till nytt instruktionssteg i formuläret
+addFormStepBtn.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-step-input';
+    const stegNummer = formStepsList.getElementsByTagName('input').length + 1;
+    input.placeholder = `Steg ${stegNummer}: T.ex. Rör om`;
+    formStepsList.appendChild(input);
+});
+
+// Hantera när formuläret skickas (Spara recept)
+recipeForm.addEventListener('submit', (e) => {
+    e.preventDefault(); // Förhindra att sidan laddas om
+
+    // 1. Samla in bas-data
+    const namn = document.getElementById('form-recipe-name').value;
+    const tid = document.getElementById('form-recipe-time').value;
+
+    // 2. Samla in alla ingredienser från formuläret och städa bort tomma fält
+    const ingrediensInputs = document.querySelectorAll('.form-ingredient-input');
+    const ingredienser = Array.from(ingrediensInputs)
+        .map(input => input.value.trim())
+        .filter(value => value !== '');
+
+    // 3. Samla in alla steg från formuläret och städa bort tomma fält
+    const stegInputs = document.querySelectorAll('.form-step-input');
+    const instruktioner = Array.from(stegInputs)
+        .map(input => input.value.trim())
+        .filter(value => value !== '');
+
+    // 4. Skapa det nya recept-objektet
+    const nyttRecept = {
+        id: String(receptDatabas.length + 1), // Skapa ett enkelt temporärt ID
+        namn: namn,
+        tid: tid,
+        ingredienser: ingredienser,
+        instruktioner: instruktioner
+    };
+
+    // 5. Tryck in det nya receptet i vår lokala receptDatabas!
+    receptDatabas.push(nyttRecept);
+
+    // 6. Nollställ formuläret och stäng fönstret
+    recipeForm.reset();
+    formIngredientsList.innerHTML = '<input type="text" class="form-ingredient-input" required placeholder="T.ex. Ägg">';
+    formStepsList.innerHTML = '<input type="text" class="form-step-input" required placeholder="Steg 1: T.ex. Blanda smeten">';
+    recipeModal.classList.add('hidden');
+
+    // 7. Uppdatera hela appen så att det nya receptet och dess ingredienser syns direkt!
+    ritaUtAvailableIngredienser();
+    uppdateraReceptLista();
+});
 
 // --- INITIAL KÖRNING ---
 ritaUtAvailableIngredienser();

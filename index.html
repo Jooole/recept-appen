@@ -54,6 +54,48 @@
 
     </main>
 
+    <div id="recipe-modal" class="modal hidden">
+        <div class="modal-content">
+            <span id="close-modal" class="close-button">&times;</span>
+            <h2>Lägg till eget recept</h2>
+
+            <form id="recipe-form">
+                <div class="form-group">
+                    <label for="form-recipe-name">Receptets namn</label>
+                    <input type="text" id="form-recipe-name" required placeholder="T.ex. Farmors köttbullar">
+                </div>
+
+                <div class="form-group">
+                    <label for="form-recipe-time">Tillagningstid</label>
+                    <select id="form-recipe-time" required>
+                        <option value="snabbt">Snabbt</option>
+                        <option value="mellan" selected>Mellan</option>
+                        <option value="tidskrävande">Tidskrävande</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Ingredienser</label>
+                    <div id="form-ingredients-list">
+                        <input type="text" class="form-ingredient-input" required placeholder="T.ex. Ägg">
+                    </div>
+                    <button type="button" id="add-form-ingredient" class="secondary-button">+ Lägg till
+                        ingrediens</button>
+                </div>
+
+                <div class="form-group">
+                    <label>Instruktioner (steg för steg)</label>
+                    <div id="form-steps-list">
+                        <input type="text" class="form-step-input" required placeholder="Steg 1: T.ex. Blanda smeten">
+                    </div>
+                    <button type="button" id="add-form-step" class="secondary-button">+ Lägg till steg</button>
+                </div>
+
+                <button type="submit" class="primary-button save-recipe-btn">Spara recept</button>
+            </form>
+        </div>
+    </div>
+
     <script type="module" src="app.js"></script>
 </body>
 
