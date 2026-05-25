@@ -136,6 +136,59 @@ h3 {
     gap: 2rem;
 }
 
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    /* Lite mer luft nu när ikonen har en bakgrund */
+}
+
+.icon-bg {
+    /* Storlek (44x44px på mobil/standard) */
+    width: 44px;
+    height: 44px;
+
+    /* Centrerar ikonen inuti bubblan (flex items-center justify-center) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Grön gradient (bg-gradient-to-br from-emerald-500 to-emerald-600) */
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+
+    /* Stora rundade hörn (rounded-2xl = 16px) */
+    border-radius: 16px;
+
+    /* Grönaktig skugga (shadow-lg shadow-emerald-600/25) */
+    box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.25),
+        0 4px 6px -2px rgba(5, 150, 105, 0.15);
+
+    flex-shrink: 0;
+    /* Hindrar att bubblan trycks ihop på mobilen */
+}
+
+.header-icon {
+    width: 22px;
+    /* Perfekt storlek inuti en 44px/48px bubbla */
+    height: 22px;
+    color: white;
+    /* ÄNDRAD: Gör kniven vit så den poppar mot det gröna! */
+    flex-shrink: 0;
+}
+
+/* RESPONSIV STORLEK (sm:w-12 sm:h-12 = 48x48px på desktop) */
+@media (min-width: 640px) {
+    .icon-bg {
+        width: 48px;
+        height: 48px;
+    }
+
+    .header-icon {
+        width: 24px;
+        height: 24px;
+    }
+}
+
 /* ========================================
    BUTTONS
 ======================================== */
@@ -330,6 +383,10 @@ h3 {
     color: var(--color-primary-hover);
 }
 
+.close-panel-button {
+    display: none;
+}
+
 /* ========================================
    RECIPE PANEL STYLES
 ======================================== */
@@ -425,7 +482,12 @@ h3 {
 }
 
 .recept-kort {
-    background-color: var(--color-surface);
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    /* Standard-padding för datorer */
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    background-color: white;
 }
 
 /* ========================================
@@ -482,10 +544,53 @@ h3 {
     transform: translateX(20px);
 }
 
-/* Gör texten lite mörkare när togglen är aktiv */
-.fav-toggle-container input[type="checkbox"]:checked+.fav-toggle-text {
-    color: var(--font-color-primary);
+/* LÄGG TILL DETTA I STYLE.CSS */
+
+/* Håller ihop favorittogglen och Lägg till-knappen på en snygg rad */
+.recipes-controls-group {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    /* Avstånd mellan togglen och knappen */
+}
+
+/* Den nya diskreta gröna textknappen */
+.header-text-button {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    /* Använder din gröna app-färg */
+    font-family: var(--font-body);
+    font-size: 14px;
     font-weight: 600;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    transition: color 0.2s ease, transform 0.1s ease;
+
+    /* Tar bort klick-blink på mobilen */
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Hovringseffekt: Gör den lite mörkare grön och lyft den subtilt */
+.header-text-button:hover {
+    color: var(--color-primary-hover);
+    transform: translateY(-1px);
+}
+
+.header-text-button:active {
+    transform: translateY(0);
+}
+
+/* Mobil-justering så att allt inte krockar på små skärmar */
+@media (max-width: 768px) {
+    .recipes-controls-group {
+        width: 100%;
+        justify-content: space-between;
+        /* Trycker togglen till vänster och Lägg till till höger på mobilen */
+        margin-top: 0.5rem;
+    }
 }
 
 /* ========================================
@@ -697,18 +802,12 @@ h3 {
    RESPONSIV MOBILDESIGN
 ======================================== */
 
-/* Göm mobil-element på desktop som standard */
-.mobile-footer-bar,
-.close-panel-button {
-    display: none;
-}
-
 @media (max-width: 768px) {
 
     /* Stapla panelerna vertikalt och minska marginaler */
     main {
         flex-direction: column;
-        padding: 1rem;
+        padding: 1rem 0;
         gap: 10px;
         margin-bottom: 70px;
         /* Ger utrymme så footern inte täcker sista receptet */
@@ -791,7 +890,7 @@ h3 {
 
         /* Design och form */
         padding: 0.85rem 1.5rem;
-        background-color: #7354ff;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         /* Mörk elegant färg, eller var(--color-primary) för grön! */
         color: white;
         border: none;
@@ -799,7 +898,8 @@ h3 {
         /* Ger perfekt runda "pill"-hörn */
 
         /* Kraftig skugga för att skapa djup (svävande effekt) */
-        box-shadow: 0 10px 25px rgb(115, 84, 255, 0.3);
+        box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.35),
+            0 4px 6px -2px rgba(5, 150, 105, 0.25);
         z-index: 1000;
         /* Ligger under panelen när den öppnas, men över recepten */
         cursor: pointer;
@@ -812,7 +912,8 @@ h3 {
 
     /* Aktiv-effekt när tummen trycker på knappen */
     .mobile-fab-button:active {
-        background-color: #1E293B;
+        /* Blir lite mörkare vid tryck genom att dra ner ljusstyrkan något */
+        filter: brightness(0.9);
         transform: translateX(-50%) scale(0.95);
         /* Krymper lite subtilt vid tryck */
     }
@@ -845,6 +946,10 @@ h3 {
         letter-spacing: 0.5px;
     }
 
+    #recipes-results-container {
+        padding: 1rem 0;
+    }
+
     /* Justera mobil-headern för receptlistan */
     .recipes-header-top {
         flex-direction: column;
@@ -854,5 +959,18 @@ h3 {
 
     .fav-toggle-container {
         align-self: flex-start;
+    }
+
+    .header-text-button {
+        padding: 0 0.5rem;
+    }
+
+    .match-badge {
+        height: 32px;
+    }
+
+    .recept-kort {
+        padding: 1rem;
+        /* Mindre och mer kompakt på mobilskärmar! */
     }
 }

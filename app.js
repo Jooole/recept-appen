@@ -12,7 +12,7 @@ const ingredientSearch = document.getElementById('ingredient-search');
 const favToggle = document.getElementById('fav-toggle');
 
 // Modal-element
-const openModalBtn = document.querySelector('.primary-button'); // Knappen i headern
+const openModalBtn = document.getElementById('open-recipe-modal-btn'); // Knappen i headern
 const recipeModal = document.getElementById('recipe-modal');
 const closeModalBtn = document.getElementById('close-modal');
 const recipeForm = document.getElementById('recipe-form');
@@ -114,7 +114,7 @@ function hanteraKlickRad(ingrediensName) {
 
 // 4. Uppdatera gränssnittet för valda ingredienser (Tags)
 function uppdateraValdaIngredienserUI() {
-    selectionSubheader.textContent = `${valdaIngredienser.length} ingredienser valda`;
+    selectionSubheader.textContent = `${valdaIngredienser.length} valda`;
 
     if (valdaIngredienser.length > 0) {
         selectedSection.classList.remove('hidden');
@@ -212,11 +212,6 @@ function uppdateraReceptLista() {
     bearbetadeRecept.forEach(recept => {
         const receptKort = document.createElement('div');
         receptKort.className = 'recept-kort';
-        receptKort.style.marginBottom = '1.5rem';
-        receptKort.style.padding = '1.5rem';
-        receptKort.style.border = '1px solid #E2E8F0';
-        receptKort.style.borderRadius = '12px';
-        receptKort.style.backgroundColor = 'white';
 
         let färgKlass = 'gray-match';
         if (recept.matchningsProcent >= 75) {
@@ -257,7 +252,7 @@ procentBadge.className = `match-badge ${färgKlass}`;
 procentBadge.textContent = `${recept.matchningsProcent}%`;
 
 // LÄGG TILL ALLT DIREKT I HEADER-FLEX (Ordningen bestämmer placeringen!)
-headerFlex.appendChild(rubrik);       /* Rubriken hamnar direkt efter (med 1rem avstånd från CSS) */
+headerFlex.appendChild(rubrik);       /* Rubrik hamnar till vänster */
 headerFlex.appendChild(procentBadge); /* Procentbadgen ligger kvar längst till höger */
 
 receptKort.appendChild(headerFlex);
