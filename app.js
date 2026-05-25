@@ -9,6 +9,7 @@ const clearAllButton = document.getElementById('clear-all-button');
 const recipeSubheader = document.getElementById('recipe-subheader');
 const recipesResultsContainer = document.getElementById('recipes-results-container');
 const ingredientSearch = document.getElementById('ingredient-search');
+const favToggle = document.getElementById('fav-toggle');
 
 // Modal-element
 const openModalBtn = document.querySelector('.primary-button'); // Knappen i headern
@@ -23,6 +24,8 @@ const addFormStepBtn = document.getElementById('add-form-step');
 // --- TILLSTÅND (STATE) ---
 let valdaIngredienser = [];
 let sokord = '';
+let favoritRecept = []; // Sparar ID:n på de recept som användaren gillar
+let visaBaraFavoriter = false; // Håller reda på om filtret är aktivt
 
 // --- FUNKTIONER ---
 
@@ -164,26 +167,25 @@ clearAllButton.addEventListener('click', () => {
 // ========================================
 
 function uppdateraReceptLista() {
+    // Gör om alla valda ingredienser till små bokstäver en gång för alla inför jämförelsen
+    const valdaIngredienserLow = valdaIngredienser.map(i => i.toLowerCase());
+
     // a) Loopa igenom alla recept och räkna ut matchningsprocent + saknade ingredienser
-    const bearbetadeRecept = receptDatabas.map(recept => {
-        
-        // Hitta vilka ingredienser i receptet som användaren har i kylen
+    let bearbetadeRecept = receptDatabas.map(recept => {
+        // Kontrollera matchning oavsett stora/små bokstäver
         const matchande = recept.ingredienser.filter(ingrediens => 
-            valdaIngredienser.includes(ingrediens)
+            valdaIngredienserLow.includes(ingrediens.toLowerCase())
         );
 
-        // Hitta vilka ingredienser som saknas
         const saknade = recept.ingredienser.filter(ingrediens => 
-            !valdaIngredienser.includes(ingrediens)
+            !valdaIngredienserLow.includes(ingrediens.toLowerCase())
         );
 
-        // Räkna ut procent (om inga ingredienser är valda blir det 0%)
         let procent = 0;
         if (recept.ingredienser.length > 0) {
             procent = Math.round((matchande.length / recept.ingredienser.length) * 100);
         }
 
-        // Returnera ett nytt tillfälligt objekt med beräkningarna inkluderade
         return {
             ...recept,
             matchningsProcent: procent,
@@ -191,14 +193,21 @@ function uppdateraReceptLista() {
         };
     });
 
-    // b) Sortera listan så att högst procent hamnar först (fallande ordning)
+    // NYTT: b) Om toggle-knappen är aktiverad, filtrera bort allt som inte är favoritmarkerat
+    if (visaBaraFavoriter) {
+        bearbetadeRecept = bearbetadeRecept.filter(recept => 
+            favoritRecept.includes(recept.id)
+        );
+    }
+
+    // c) Sortera listan så att högst procent hamnar först
     bearbetadeRecept.sort((a, b) => b.matchningsProcent - a.matchningsProcent);
 
-    // c) Uppdatera subheadern för receptlistan
+    // d) Uppdatera subheadern för receptlistan
     recipeSubheader.textContent = `Visar ${bearbetadeRecept.length} recept baserat på dina ingredienser`;
 
-    // d) Rendera ut recepten i HTML
-    recipesResultsContainer.innerHTML = ''; // Töm gamla listan
+    // e) Rendera ut recepten i HTML
+    recipesResultsContainer.innerHTML = ''; 
 
     bearbetadeRecept.forEach(recept => {
         const receptKort = document.createElement('div');
@@ -209,7 +218,6 @@ function uppdateraReceptLista() {
         receptKort.style.borderRadius = '12px';
         receptKort.style.backgroundColor = 'white';
 
-        // 1. Bestäm färgklass baserat på procent
         let färgKlass = 'gray-match';
         if (recept.matchningsProcent >= 75) {
             färgKlass = 'green-match';
@@ -217,44 +225,60 @@ function uppdateraReceptLista() {
             färgKlass = 'yellow-match';
         }
 
-        // 2. Flex-behållare för rubrik och procentruta (Tidsinfon borttagen härifrån!)
         const headerFlex = document.createElement('div');
         headerFlex.className = 'recept-header-flex';
 
-        const titelInfoDiv = document.createElement('div');
-        const rubrik = document.createElement('h1'); 
-        rubrik.textContent = recept.namn;
-        titelInfoDiv.appendChild(rubrik);
+        // Skapa rubriken
+const rubrik = document.createElement('h1'); 
+rubrik.textContent = recept.namn;
 
-        const procentBadge = document.createElement('div');
-        procentBadge.className = `match-badge ${färgKlass}`;
-        procentBadge.textContent = `${recept.matchningsProcent}%`;
+// Skapa hjärt-knappen
+const favBtn = document.createElement('button');
+favBtn.className = 'fav-btn';
 
-        headerFlex.appendChild(titelInfoDiv);
-        headerFlex.appendChild(procentBadge);
-        receptKort.appendChild(headerFlex);
+const ärFavorit = favoritRecept.includes(recept.id);
+if (ärFavorit) {
+    favBtn.classList.add('is-favorite');
+}
+
+favBtn.innerHTML = `
+    <svg class="fav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${ärFavorit ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+    </svg>
+`;
+
+favBtn.addEventListener('click', () => {
+    hanteraFavoritKlick(recept.id);
+});
+
+// Skapa procentbadgen
+const procentBadge = document.createElement('div');
+procentBadge.className = `match-badge ${färgKlass}`;
+procentBadge.textContent = `${recept.matchningsProcent}%`;
+
+// LÄGG TILL ALLT DIREKT I HEADER-FLEX (Ordningen bestämmer placeringen!)
+headerFlex.appendChild(rubrik);       /* Rubriken hamnar direkt efter (med 1rem avstånd från CSS) */
+headerFlex.appendChild(procentBadge); /* Procentbadgen ligger kvar längst till höger */
+
+receptKort.appendChild(headerFlex);
 
         // 3. Visa saknade ingredienser om det behövs
         if (recept.matchningsProcent < 100 && valdaIngredienser.length > 0) {
-            // Skapa huvudbehållaren för hela raden
             const saknadeContainer = document.createElement('div');
             saknadeContainer.className = 'saknade-container';
 
-            // Skapa texten "Saknas:"
             const saknadeTitel = document.createElement('span');
             saknadeTitel.className = 'saknade-titel';
             saknadeTitel.textContent = 'Saknas:';
             saknadeContainer.appendChild(saknadeTitel);
 
-            // Loopa igenom varje saknad ingrediens och skapa en egen badge
             recept.saknadeIngredienser.forEach(ingrediens => {
-                const badge = document.createElement('span');
-                badge.className = 'saknad-badge';
-                badge.textContent = ingrediens;
-                saknadeContainer.appendChild(badge);
-            });
+    const badge = document.createElement('span');
+    badge.className = 'saknad-badge';
+    badge.textContent = ingrediens; // Endast denna rad behövs!
+    saknadeContainer.appendChild(badge);
+});
 
-            // Lägg till hela härligheten i receptkortet
             receptKort.appendChild(saknadeContainer);
         }
 
@@ -269,14 +293,13 @@ function uppdateraReceptLista() {
         });
         receptKort.appendChild(ol);
 
-        // 5. NYTT: Skapa en Footer för kortet med klockikon och tid
+        // 5. Skapa en Footer för kortet med klockikon och tid
         const footer = document.createElement('footer');
         footer.className = 'recept-footer';
 
         const tidContainer = document.createElement('div');
         tidContainer.className = 'tid-container';
 
-        // Här ritar vi upp en stilren klockikon via SVG
         tidContainer.innerHTML = `
             <svg class="tid-ikon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin='round' stroke-width='2' d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
@@ -285,7 +308,12 @@ function uppdateraReceptLista() {
         `;
 
         footer.appendChild(tidContainer);
-        receptKort.appendChild(footer); // Lägg till footern absolut längst ner på kortet
+        
+        // RÄTT PLACERING: Lägg till hjärtat i footern (det hamnar till höger om tiden)
+        footer.appendChild(favBtn); 
+
+        // Spika fast footern i själva receptkortet
+        receptKort.appendChild(footer); 
 
         recipesResultsContainer.appendChild(receptKort);
     });
@@ -301,15 +329,31 @@ ingredientSearch.addEventListener('input', (e) => {
 // MODAL & FORMULÄR-LOGIK
 // ========================================
 
-// Öppna modalen
-openModalBtn.addEventListener('click', () => {
-    recipeModal.classList.remove('hidden');
-});
+// Öppna modalen ("Lägg till recept")
+if (openModalBtn) {
+    openModalBtn.addEventListener('click', () => {
+        recipeModal.classList.remove('hidden');
+        
+        // NYTT: Göm FAB-knappen när modalen öppnas
+        const fabButton = document.getElementById('mobile-footer-trigger');
+        if (fabButton) {
+            fabButton.style.display = 'none';
+        }
+    });
+}
 
 // Stäng modalen via krysset
-closeModalBtn.addEventListener('click', () => {
-    recipeModal.classList.add('hidden');
-});
+if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+        recipeModal.classList.add('hidden');
+        
+        // NYTT: Visa FAB-knappen igen när modalen stängs (endast om vi är på mobil)
+        const fabButton = document.getElementById('mobile-footer-trigger');
+        if (fabButton && window.innerWidth <= 768) {
+            fabButton.style.display = 'flex'; // Eftersom vi använder flex i CSS
+        }
+    });
+}
 
 // Stäng modalen om man klickar utanför fönstret
 window.addEventListener('click', (e) => {
@@ -380,6 +424,126 @@ recipeForm.addEventListener('submit', (e) => {
     uppdateraReceptLista();
 });
 
+// NY FUNKTION: Lägg till eller ta bort recept-id från favorit-listan
+function hanteraFavoritKlick(receptId) {
+    const index = favoritRecept.indexOf(receptId);
+    
+    if (index === -1) {
+        favoritRecept.push(receptId); // Lägg till om det inte fanns
+    } else {
+        favoritRecept.splice(index, 1); // Ta bort om det redan fanns
+    }
+    
+    // Rita omedelbart om listan så att hjärtat ändrar färg (eller försvinner om filtret är på)
+    uppdateraReceptLista();
+}
+
+// Event listener för "Visa favoriter"-togglen
+favToggle.addEventListener('change', (e) => {
+    visaBaraFavoriter = e.target.checked; // Sätt till true eller false beroende på om den är ikryssad
+    uppdateraReceptLista(); // Rita om listan direkt med det nya filtret!
+});
+
 // --- INITIAL KÖRNING ---
 ritaUtAvailableIngredienser();
 uppdateraReceptLista(); // Körs direkt vid start så alla recept visas på 0%
+
+// ===================================================
+// MOBIL-LOGIK (FOOTER-LIST MED EXPANDEBARA INGREDIENSER)
+// ===================================================
+const mobileFooterTrigger = document.getElementById('mobile-footer-trigger');
+const closeIngredientsBox = document.getElementById('close-ingredients-box');
+const ingredientsPanel = document.getElementById('ingredients-panel');
+
+// Funktion för att öppna lådan
+if (mobileFooterTrigger) {
+    mobileFooterTrigger.addEventListener('click', () => {
+        // Sätt tillbaka grundanimationen inför öppningen
+        ingredientsPanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+        
+        ingredientsPanel.classList.add('is-open');
+        mobileFooterTrigger.classList.add('panel-active'); 
+        document.body.style.overflow = 'hidden'; 
+    });
+}
+
+// Funktion för att stänga lådan
+// === UPPDATERA DENNA FUNKTION I APP.JS ===
+if (closeIngredientsBox) {
+    closeIngredientsBox.addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        ingredientsPanel.classList.remove('is-open');
+        mobileFooterTrigger.classList.remove('panel-active'); 
+        document.body.style.overflow = ''; 
+        
+        // Garantera att krysset alltid kan stänga panelen oavsett om man har dragit i den innan
+        ingredientsPanel.style.transform = '';
+    });
+}
+
+// ===================================================
+// SVEP-LOGIK (SWIPE TO CLOSE) FÖR INGREDIENSLÅDAN
+// ===================================================
+const panelHeader = ingredientsPanel.querySelector('.panel-header');
+const dragHandle = ingredientsPanel.querySelector('.drag-handle');
+
+let startY = 0;
+let currentY = 0;
+let isDragging = false;
+
+// Funktion som startar när användaren sätter ner fingret på headern eller strecket
+function onTouchStart(e) {
+    startY = e.touches[0].clientY;
+    isDragging = true;
+    
+    // Ta tillfälligt bort CSS-transitionen så att panelen följer fingret direkt utan fördröjning
+    ingredientsPanel.style.transition = 'none';
+}
+
+// Funktion som körs hela tiden när användaren drar fingret
+function onTouchMove(e) {
+    if (!isDragging) return;
+    
+    currentY = e.touches[0].clientY;
+    const deltaY = currentY - startY; // Hur många pixlar fingret har rört sig nedåt
+    
+    // Tillåt bara att man drar NEDÅT (deltaY > 0)
+    if (deltaY > 0) {
+        ingredientsPanel.style.transform = `translateY(${deltaY}px)`;
+    }
+}
+
+// Funktion som körs när användaren lyfter fingret
+function onTouchEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    
+    // Sätt tillbaka CSS-transitionen så panelen animeras snyggt när vi släpper
+    ingredientsPanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+    
+    const deltaY = currentY - startY;
+    
+    // UX-Gräns: Om man dragit ner mer än 100px stänger vi panelen, annars återställer vi den
+    if (deltaY > 200) {
+        ingredientsPanel.classList.remove('is-open');
+        mobileFooterTrigger.classList.remove('panel-active');
+        document.body.style.overflow = '';
+        ingredientsPanel.style.transform = '';
+    } else {
+        // Ångrat drag – glid tillbaka upp till toppen
+        ingredientsPanel.style.transform = '';
+    }
+    
+    // Nollställ positionerna inför nästa svep
+    startY = 0;
+    currentY = 0;
+}
+
+// Koppla touch-händelserna till både det lilla strecket och hela headern
+if (panelHeader && dragHandle) {
+    [panelHeader, dragHandle].forEach(element => {
+        element.addEventListener('touchstart', onTouchStart, { passive: true });
+        element.addEventListener('touchmove', onTouchMove, { passive: true });
+        element.addEventListener('touchend', onTouchEnd);
+    });
+}

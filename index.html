@@ -19,19 +19,21 @@
 
     <main>
         <section id="ingredients-panel">
+            <div class="drag-handle"></div>
+            <button id="close-ingredients-box" class="close-panel-button">&times;</button>
             <header class="panel-header">
-                <h3>Dina ingredienser</h3>
+                <h2>Dina ingredienser</h2>
                 <p id="selection-subheader" class="subheader">0 ingredienser valda</p>
             </header>
 
             <div class="search-container">
-                <input type="text" id="ingredient-search" placeholder="Search ingredients...">
+                <input type="text" id="ingredient-search" placeholder="Sök ingredienser...">
             </div>
 
             <div id="selected-section" class="panel-inner-section hidden">
                 <header class="section-sub-header">
-                    <h2>SELECTED</h2>
-                    <button id="clear-all-button" class="clear-all">Clear all</button>
+                    <h2>Valda</h2>
+                    <button id="clear-all-button" class="clear-all">Rensa alla</button>
                 </header>
                 <div id="selected-ingredients-list" class="tag-list">
                 </div>
@@ -46,8 +48,17 @@
 
         <section id="recipes-section" class="recipes-panel">
             <div class="recipes-header">
-                <h1 class="recipes-header-text">Tillgängliga recept</h1>
-                <p id="recipe-subheader" class="subheader">Visar X recept baserat på dina ingredienser</p>
+                <div class="recipes-header-top">
+                    <div class="recipes-title-group">
+                        <h2 class="recipes-header-text">Tillgängliga recept</h2>
+                        <p id="recipe-subheader" class="subheader">Visar X recept baserat på dina ingredienser</p>
+                    </div>
+
+                    <label class="fav-toggle-container">
+                        <input type="checkbox" id="fav-toggle"> <span class="fav-toggle-text">Visa favoriter</span>
+                        <div class="toggle-switch"></div>
+                    </label>
+                </div>
             </div>
             <div id="recipes-results-container"></div>
         </section>
@@ -57,12 +68,14 @@
     <div id="recipe-modal" class="modal hidden">
         <div class="modal-content">
             <span id="close-modal" class="close-button">&times;</span>
-            <h2>Lägg till eget recept</h2>
+            <h1 class="modal-header">Lägg till eget recept</h1>
 
             <form id="recipe-form">
                 <div class="form-group">
                     <label for="form-recipe-name">Receptets namn</label>
-                    <input type="text" id="form-recipe-name" required placeholder="T.ex. Farmors köttbullar">
+                    <input type="text" id="form-recipe-name" required
+                        oninvalid="this.setCustomValidity('Fyll i det här fältet.')"
+                        oninput="this.setCustomValidity('')" placeholder="T.ex. Farmors köttbullar">
                 </div>
 
                 <div class="form-group">
@@ -77,7 +90,9 @@
                 <div class="form-group">
                     <label>Ingredienser</label>
                     <div id="form-ingredients-list">
-                        <input type="text" class="form-ingredient-input" required placeholder="T.ex. Ägg">
+                        <input type="text" class="form-ingredient-input" required
+                            oninvalid="this.setCustomValidity('Fyll i det här fältet.')"
+                            oninput="this.setCustomValidity('')" placeholder="T.ex. Ägg">
                     </div>
                     <button type="button" id="add-form-ingredient" class="secondary-button">+ Lägg till
                         ingrediens</button>
@@ -86,7 +101,9 @@
                 <div class="form-group">
                     <label>Instruktioner (steg för steg)</label>
                     <div id="form-steps-list">
-                        <input type="text" class="form-step-input" required placeholder="Steg 1: T.ex. Blanda smeten">
+                        <input type="text" class="form-step-input" required
+                            oninvalid="this.setCustomValidity('Fyll i det här fältet.')"
+                            oninput="this.setCustomValidity('')" placeholder="Steg 1: T.ex. Blanda smeten">
                     </div>
                     <button type="button" id="add-form-step" class="secondary-button">+ Lägg till steg</button>
                 </div>
@@ -95,6 +112,11 @@
             </form>
         </div>
     </div>
+
+    <button id="mobile-footer-trigger" class="mobile-fab-button">
+        <span class="fab-arrow">▲</span>
+        <span class="fab-text">Ingredienser</span>
+    </button>
 
     <script type="module" src="app.js"></script>
 </body>

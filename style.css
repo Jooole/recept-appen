@@ -14,7 +14,7 @@
     --font-mono: 'JetBrains Mono', monospace;
 
     --font-color-primary: #0F172B;
-    --font-color-secondary: #45556C;
+    --font-color-secondary: #8290a2;
     --font-color-warning: #B45309;
     --font-color-success: #007A55;
     --font-color-danger: #C70036;
@@ -81,6 +81,10 @@ main {
     display: none !important;
 }
 
+li {
+    padding: 4px 0;
+}
+
 /* ========================================
    TYPOGRAPHY
 ======================================== */
@@ -111,6 +115,7 @@ h3 {
 .subheader {
     font-size: 14px;
     color: var(--font-color-secondary);
+    margin-top: 4px;
 }
 
 /* ========================================
@@ -154,9 +159,6 @@ h3 {
 /* ========================================
    INGREDIENTS PANEL
 ======================================== */
-/* ========================================
-   INGREDIENTS PANEL (KRAMAR INNEHÅLLET)
-======================================== */
 #ingredients-panel {
     background-color: var(--color-surface);
     border: 1px solid var(--border-color);
@@ -176,6 +178,10 @@ h3 {
 .panel-header {
     padding: 1rem;
     border-bottom: 1px solid var(--border-color);
+}
+
+#selection-subheader {
+    color: var(--font-color-secondary);
 }
 
 .search-container {
@@ -336,7 +342,82 @@ h3 {
 }
 
 .recipes-header {
-    padding: 1rem;
+    padding: 0 1rem;
+}
+
+.recipes-header-top {
+    display: flex;
+    justify-content: space-between;
+    /* Trycker titeln till vänster och togglen till höger */
+    align-items: center;
+    /* Centrerar dem vertikalt mot varandra */
+    gap: 2rem;
+    width: 100%;
+}
+
+/* Ny container som staplar rubriken över subheadern */
+.recipes-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    /* Avstånd mellan huvudrubrik och subheader */
+}
+
+/* Se till att din gamla subheader inte har några konstiga marginaler som spökar */
+#recipe-subheader {
+    margin: 0;
+}
+
+/* Vänd ordningen på animationen för togglen eftersom texten nu ligger först */
+.fav-toggle-container input[type="checkbox"]:checked+.toggle-switch::after {
+    /* Denna är oförändrad, men kontrollera att den matchar din tidigare kod */
+    transform: translateX(20px);
+}
+
+.fav-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 28px;
+    /* Lite större och lättare att klicka på i botten */
+    height: 28px;
+
+    flex-shrink: 0;
+    color: #94A3B8 !important;
+    transition: transform 0.1s ease, color 0.2s ease;
+
+    /* Trycker hjärtat hela vägen till högerkanten i footern */
+    margin-left: auto;
+    margin-right: 0;
+    margin-top: 0;
+
+    /* Tar bort den fula blinkande rutan på mobiler (iOS & Android) */
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fav-btn:hover {
+    transform: scale(1.15);
+}
+
+.fav-btn .fav-icon {
+    width: 100%;
+    height: 100%;
+    color: inherit;
+}
+
+.fav-btn.is-favorite {
+    color: rgb(250, 109, 109) !important;
+    /* Detta gör hjärtat rött */
+}
+
+.recipes-header-text {
+    margin-bottom: 0.25rem;
 }
 
 #recipes-results-container {
@@ -348,15 +429,86 @@ h3 {
 }
 
 /* ========================================
+   MODERN TOGGLE-SWITCH FÖR FAVORITER
+======================================== */
+
+.fav-toggle-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--font-color-secondary);
+}
+
+/* Skapa spåret (bakgrunden på switchen) */
+.toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background-color: #E2E8F0;
+    border-radius: 12px;
+    transition: background-color 0.2s ease;
+}
+
+/* Skapa den runda pucken inuti switchen */
+.toggle-switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease;
+}
+
+/* Göm undan standard-checkboxen helt */
+.fav-toggle-container input[type="checkbox"] {
+    display: none;
+}
+
+/* NÄR DEN ÄR AKTIVERAD: Hitta brytaren som ligger efter checkboxen (~ hittar elementet längre fram) */
+.fav-toggle-container input[type="checkbox"]:checked~.toggle-switch {
+    background-color: var(--color-primary);
+}
+
+/* NÄR DEN ÄR AKTIVERAD: Glid över pucken till höger */
+.fav-toggle-container input[type="checkbox"]:checked~.toggle-switch::after {
+    transform: translateX(20px);
+}
+
+/* Gör texten lite mörkare när togglen är aktiv */
+.fav-toggle-container input[type="checkbox"]:checked+.fav-toggle-text {
+    color: var(--font-color-primary);
+    font-weight: 600;
+}
+
+/* ========================================
    RECEPTKORT
 ======================================== */
 
 /* Behållare för hela recept-headern så att procentrutan hamnar till höger */
 .recept-header-flex {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 1rem;
+    justify-content: space-between;
+    /* Detta garanterar att procentbadgen alltid ligger klistrad till höger */
+    width: 100%;
+}
+
+/* Förhindrar textkrockar i kortets header på mobilen */
+.recept-header-flex h1 {
+    font-size: 20px;
+    /* Lite mer kompakt på mobilen */
+    margin: 0;
+    word-break: break-word;
+    flex-grow: 1;
+    /* Låter texten ta upp utrymmet i mitten */
 }
 
 /* Själva procentrutan */
@@ -364,6 +516,7 @@ h3 {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-left: auto;
     min-width: 52px;
     height: 40px;
     border-radius: 8px;
@@ -468,6 +621,10 @@ h3 {
     align-items: center;
 }
 
+.modal-header {
+    margin-bottom: 1rem;
+}
+
 .modal-content {
     background-color: var(--color-surface);
     padding: 2rem;
@@ -502,7 +659,7 @@ h3 {
 .form-group label {
     display: block;
     font-weight: 600;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
     font-size: 13px;
 }
 
@@ -534,4 +691,168 @@ h3 {
 .save-recipe-btn {
     width: 100%;
     margin-top: 1rem;
+}
+
+/* ========================================
+   RESPONSIV MOBILDESIGN
+======================================== */
+
+/* Göm mobil-element på desktop som standard */
+.mobile-footer-bar,
+.close-panel-button {
+    display: none;
+}
+
+@media (max-width: 768px) {
+
+    /* Stapla panelerna vertikalt och minska marginaler */
+    main {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 10px;
+        margin-bottom: 70px;
+        /* Ger utrymme så footern inte täcker sista receptet */
+    }
+
+    /* 1. FIXERA INGREDIENSPANELEN SÅ DEN GLIDER UPPÅT */
+    #ingredients-panel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        max-height: 80vh;
+        /* Tar max 80% av skärmhöjden */
+        background-color: var(--color-surface);
+        z-index: 1100;
+        /* Ligger ovanför recepten */
+        border-radius: 20px 20px 0 0;
+        /* Runda hörn i toppen */
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+        padding-bottom: 2rem;
+
+        /* Göm under skärmkanten och förbered animation */
+        transform: translateY(100%);
+        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* När panelen är öppen glider den upp till sin position */
+    #ingredients-panel.is-open {
+        transform: translateY(0);
+    }
+
+    /* Stängningskrysset uppe i högra hörnet */
+    .close-panel-button {
+        display: block;
+        position: absolute;
+        top: 1rem;
+        right: 1.5rem;
+        background: none;
+        border: none;
+        font-size: 32px;
+        color: var(--font-color-secondary);
+        cursor: pointer;
+        z-index: 10;
+    }
+
+    .drag-handle {
+        width: 40px;
+        height: 5px;
+        background-color: #CBD5E1;
+        /* Diskret grå färg */
+        border-radius: 5px;
+        /* Rundade kanter */
+        margin: 12px auto 0 auto;
+        /* Centrera horisontellt och ge lite luft i toppen */
+        cursor: grab;
+        /* Visar en hand på desktop-simulatorn */
+    }
+
+    /* Gör hela headern greppbar */
+    #ingredients-panel .panel-header {
+        cursor: grab;
+        user-select: none;
+        /* Hindrar att texten markeras när man drar */
+    }
+
+    /* 2. STYLE FÖR DEN FLYTANDE ACTION-KNAPPEN (FAB) */
+    .mobile-fab-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+
+        /* Fixera knappen svävande i botten */
+        position: fixed;
+        bottom: 24px;
+        /* Distans från skärmens absoluta botten */
+        left: 50%;
+        transform: translateX(-50%);
+        /* Centrerar knappen perfekt i mitten */
+
+        /* Design och form */
+        padding: 0.85rem 1.5rem;
+        background-color: #7354ff;
+        /* Mörk elegant färg, eller var(--color-primary) för grön! */
+        color: white;
+        border: none;
+        border-radius: 5rem;
+        /* Ger perfekt runda "pill"-hörn */
+
+        /* Kraftig skugga för att skapa djup (svävande effekt) */
+        box-shadow: 0 10px 25px rgb(115, 84, 255, 0.3);
+        z-index: 1000;
+        /* Ligger under panelen när den öppnas, men över recepten */
+        cursor: pointer;
+        user-select: none;
+
+        /* Säkerställ att den inte krymper på pyttesmå skärmar */
+        white-space: nowrap;
+        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.2s ease;
+    }
+
+    /* Aktiv-effekt när tummen trycker på knappen */
+    .mobile-fab-button:active {
+        background-color: #1E293B;
+        transform: translateX(-50%) scale(0.95);
+        /* Krymper lite subtilt vid tryck */
+    }
+
+    /* Triangeln/Pilen inuti FAB:en */
+    .fab-arrow {
+        font-size: 16px;
+        color: #ffffff;
+        /* Din snygga gröna app-färg som accent */
+        transition: transform 0.3s ease;
+    }
+
+    /* Rotera triangeln och göm/animera knappen om det behövs (styrs via JS) */
+    .mobile-fab-button.panel-active .fab-arrow {
+        transform: rotate(180deg);
+    }
+
+    /* Göm undan FAB:en helt när lådan väl är öppen så den inte ligger i vägen */
+    .mobile-fab-button.panel-active {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    /* Texten i knappen */
+    .fab-text {
+        font-family: var(--font-heading);
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    /* Justera mobil-headern för receptlistan */
+    .recipes-header-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .fav-toggle-container {
+        align-self: flex-start;
+    }
 }
