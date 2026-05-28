@@ -1,6 +1,6 @@
 // === LÄGG TILL DETTA ALLRA HÖGST UPP I APP.JS ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Din unika Firebase-konfiguration
 const firebaseConfig = {
@@ -27,10 +27,14 @@ const availableIngredientsList = document.getElementById('available-ingredients-
 const selectedSection = document.getElementById('selected-section');
 const selectedIngredientsList = document.getElementById('selected-ingredients-list');
 const clearAllButton = document.getElementById('clear-all-button');
-const recipeSubheader = document.getElementById('recipe-subheader');
 const recipesResultsContainer = document.getElementById('recipes-results-container');
 const ingredientSearch = document.getElementById('ingredient-search');
 const favToggle = document.getElementById('fav-toggle');
+
+// Sökelement för recepttitlar
+const recipeSearchInput = document.getElementById('recipeSearchInput');
+const searchCloseBtn = document.getElementById('searchCloseBtn');
+const searchBadgeContainer = document.getElementById('search-badge-container');
 
 // Modal-element
 const openModalBtn = document.getElementById('open-recipe-modal-btn'); // Knappen i headern
@@ -200,11 +204,22 @@ clearAllButton.addEventListener('click', () => {
 // ========================================
 
 function uppdateraReceptLista() {
+    // 1. NYTT: Hämta sökordet för recepttitlar och tvätta det
+    const receptSokord = recipeSearchInput ? recipeSearchInput.value.toLowerCase().trim() : '';
+
+    // 2. NYTT: Filtrera receptDatabas baserat på sökordet INNAN vi räknar procent
+    let söktaRecept = receptDatabas;
+    if (receptSokord !== '') {
+        söktaRecept = receptDatabas.filter(recept => 
+            recept.namn.toLowerCase().includes(receptSokord)
+        );
+    }
+
     // Gör om alla valda ingredienser till små bokstäver en gång för alla inför jämförelsen
     const valdaIngredienserLow = valdaIngredienser.map(i => i.toLowerCase());
 
-    // a) Loopa igenom alla recept och räkna ut matchningsprocent + saknade ingredienser
-    let bearbetadeRecept = receptDatabas.map(recept => {
+    // 3. ANVÄND 'söktaRecept' ISTÄLLET FÖR 'receptDatabas' HÄR:
+    let bearbetadeRecept = söktaRecept.map(recept => {
         // Kontrollera matchning oavsett stora/små bokstäver
         const matchande = recept.ingredienser.filter(ingrediens => 
             valdaIngredienserLow.includes(ingrediens.toLowerCase())
@@ -226,7 +241,7 @@ function uppdateraReceptLista() {
         };
     });
 
-    // NYTT: b) Om toggle-knappen är aktiverad, filtrera bort allt som inte är favoritmarkerat
+    // b) Om toggle-knappen är aktiverad, filtrera bort allt som inte är favoritmarkerat
     if (visaBaraFavoriter) {
         bearbetadeRecept = bearbetadeRecept.filter(recept => 
             favoritRecept.includes(recept.id)
@@ -236,8 +251,25 @@ function uppdateraReceptLista() {
     // c) Sortera listan så att högst procent hamnar först
     bearbetadeRecept.sort((a, b) => b.matchningsProcent - a.matchningsProcent);
 
-    // d) Uppdatera subheadern för receptlistan
-    recipeSubheader.textContent = `Visar ${bearbetadeRecept.length} recept baserat på dina ingredienser`;
+    // d) Hantera den gröna sökbadgen dynamiskt (Placeholder uppdateras i laddaRecept)
+    if (receptSokord !== '') {
+        // Bygg upp HTML-strukturen för den gröna sökbadgen live
+        searchBadgeContainer.innerHTML = `
+            <div class="search-badge">
+                Searching for: <strong>"${recipeSearchInput.value}"</strong>
+                <button type="button" class="search-badge-close" id="searchBadgeCloseBtn">&times;</button>
+            </div>
+        `;
+        
+        // Gör så att man kan stänga sökningen även genom att klicka på badgens kryss
+        document.getElementById('searchBadgeCloseBtn').addEventListener('click', () => {
+            recipeSearchInput.value = '';
+            searchCloseBtn.classList.add('is-hidden');
+            uppdateraReceptLista();
+        });
+    } else {
+        searchBadgeContainer.innerHTML = ''; // Ta bort badgen helt när fältet är tomt
+    }
 
     // e) Rendera ut recepten i HTML
     recipesResultsContainer.innerHTML = ''; 
@@ -257,27 +289,28 @@ function uppdateraReceptLista() {
         headerFlex.className = 'recept-header-flex';
 
         // Skapa rubriken
-const rubrik = document.createElement('h1'); 
-rubrik.textContent = recept.namn;
+        const rubrik = document.createElement('h1'); 
+        rubrik.textContent = recept.namn;
 
-// Skapa hjärt-knappen
-const favBtn = document.createElement('button');
-favBtn.className = 'fav-btn';
+        // Skapa hjärt-knappen
+        const favBtn = document.createElement('button');
+        favBtn.className = 'fav-btn';
 
-const ärFavorit = favoritRecept.includes(recept.id);
-if (ärFavorit) {
-    favBtn.classList.add('is-favorite');
-}
+        const ärFavorit = favoritRecept.includes(recept.id);
+        if (ärFavorit) {
+            favBtn.classList.add('is-favorite');
+        }
 
-favBtn.innerHTML = `
-    <svg class="fav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${ärFavorit ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-    </svg>
-`;
+        favBtn.innerHTML = `
+            <svg class="fav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${ärFavorit ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+            </svg>
+        `;
 
-favBtn.addEventListener('click', () => {
-    hanteraFavoritKlick(recept.id);
-});
+        favBtn.addEventListener('click', () => {
+            hanteraFavoritKlick(recept.id);
+        });
+
 
 // Skapa procentbadgen
 const procentBadge = document.createElement('div');
@@ -410,7 +443,7 @@ addFormStepBtn.addEventListener('click', () => {
 });
 
 // Hantera när formuläret skickas (Spara recept)
-recipeForm.addEventListener('submit', (e) => {
+recipeForm.addEventListener('submit', async (e) => {
     e.preventDefault(); // Förhindra att sidan laddas om
 
     // 1. Samla in bas-data
@@ -438,10 +471,25 @@ recipeForm.addEventListener('submit', (e) => {
         instruktioner: instruktioner
     };
 
-    // 5. Tryck in det nya receptet i vår lokala receptDatabas!
-    receptDatabas.push(nyttRecept);
-
-    // 6. Nollställ formuläret och stäng fönstret
+    // 5. Lägg till i Firebase-molnet
+    try {
+        // Skicka upp objektet till din samling "recept" i Firestore
+        const docRef = await addDoc(collection(db, "recept"), nyttRecept);
+        console.log("Recept sparat i Firebase med ID: ", docRef.id);
+        
+        // Lägg även till det i vår lokala array så det syns på skärmen direkt utan reload
+        receptDatabas.push(nyttRecept);
+        
+        // Uppdatera sökfältets placeholder live med det nya antalet recept
+        if (typeof recipeSearchInput !== 'undefined' && recipeSearchInput) {
+            recipeSearchInput.placeholder = `Sök bland ${receptDatabas.length} recept`;
+        }
+    } catch (error) {
+        console.error("Kunde inte spara receptet till Firebase: ", error);
+        alert("Ett fel uppstod när receptet skulle sparas i molnet.");
+    }
+    
+    // Återställ formuläret och stäng modalen
     recipeForm.reset();
     formIngredientsList.innerHTML = '<input type="text" class="form-ingredient-input" required placeholder="T.ex. Ägg">';
     formStepsList.innerHTML = '<input type="text" class="form-step-input" required placeholder="Steg 1: T.ex. Blanda smeten">';
@@ -472,6 +520,30 @@ favToggle.addEventListener('change', (e) => {
     uppdateraReceptLista(); // Rita om listan direkt med det nya filtret!
 });
 
+// ========================================
+// RECEPT-SÖK LOGIK
+// ========================================
+
+// 1. Lyssna live när användaren skriver i sökfältet
+recipeSearchInput.addEventListener('input', () => {
+    // Visa det lilla runda krysset inuti sökrutan om det finns text, annars göm det
+    if (recipeSearchInput.value.trim() !== '') {
+        searchCloseBtn.classList.remove('is-hidden');
+    } else {
+        searchCloseBtn.classList.add('is-hidden');
+    }
+    
+    uppdateraReceptLista(); 
+});
+
+// 2. Det runda krysset inuti sökrutan: Tömmer fältet och återställer listan helt
+searchCloseBtn.addEventListener('click', () => {
+    recipeSearchInput.value = '';
+    searchCloseBtn.classList.add('is-hidden'); // Göm krysset igen eftersom fältet blev tomt
+    recipeSearchInput.focus(); // Behåll pekaren i fältet för smidig UX
+    uppdateraReceptLista(); 
+});
+
 // === LADDA RECEPT FRÅN DATABASEN I FIREBASE) ===
 async function laddaReceptFrånFirebase() {
     try {
@@ -494,6 +566,9 @@ async function laddaReceptFrånFirebase() {
         });
 
         console.log(`Lyckades hämta ${receptDatabas.length} recept från Firebase!`);
+
+        // Uppdatera sökrutans placeholder med det exakta antalet recept från Firebase
+        recipeSearchInput.placeholder = `Sök bland ${receptDatabas.length} recept`;
         
         // NU när datan har landat kan vi köra igång gränssnittet!
         ritaUtAvailableIngredienser();
@@ -557,8 +632,8 @@ if (mobileShowRecipesBtn) {
 // ===================================================
 // SVEP-LOGIK (SWIPE TO CLOSE) FÖR INGREDIENSLÅDAN
 // ===================================================
-const panelHeader = ingredientsPanel.querySelector('.panel-header');
-const dragHandle = ingredientsPanel.querySelector('.drag-handle');
+const panelHeader = ingredientsPanel ? ingredientsPanel.querySelector('.panel-header') : null;
+const dragHandle = ingredientsPanel ? ingredientsPanel.querySelector('.drag-handle') : null;
 
 let startY = 0;
 let currentY = 0;

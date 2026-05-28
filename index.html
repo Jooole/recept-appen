@@ -26,10 +26,28 @@
                 </div>
                 <h1 class="main-header-text">Köksassistent</h1>
             </div>
+            <button id="open-recipe-modal-btn" class="header-main-button">+ Recept</button>
         </div>
     </header>
 
     <main>
+        <div class="main-search-container">
+            <div class="search-input-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor" class="search-input-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+                <input type="text" id="recipeSearchInput" placeholder="Sök recept...">
+                <button type="button" id="searchCloseBtn" class="search-clear-inline-btn is-hidden"
+                    aria-label="Rensa sökning">&times;</button>
+            </div>
+        </div>
+
+        <div class="search-meta-container">
+            <div id="search-badge-container"></div>
+        </div>
+
         <section id="ingredients-panel">
             <div class="drag-handle"></div>
             <button id="close-ingredients-box" class="close-panel-button">&times;</button>
@@ -64,22 +82,15 @@
 
         <section id="recipes-section" class="recipes-panel">
             <div class="recipes-header">
-                <div class="recipes-header-top">
-                    <div class="recipes-title-group">
-                        <h2 class="recipes-header-text">Tillgängliga recept</h2>
-                        <p id="recipe-subheader" class="subheader">Visar X recept baserat på dina ingredienser</p>
-                    </div>
-
-                    <div class="recipes-controls-group">
-                        <label class="fav-toggle-container">
-                            <input type="checkbox" id="fav-toggle"> <span class="fav-toggle-text">Visa favoriter</span>
-                            <div class="toggle-switch"></div>
-                        </label>
-
-                        <button id="open-recipe-modal-btn" class="header-text-button">+ LÄGG TILL</button>
-                    </div>
+                <div class="recipes-controls-group">
+                    <label class="fav-toggle-container">
+                        <input type="checkbox" id="fav-toggle"> <span class="fav-toggle-text">Visa favoriter</span>
+                        <div class="toggle-switch"></div>
+                    </label>
                 </div>
-                <div id="recipes-results-container"></div>
+            </div>
+
+            <div id="recipes-results-container"></div>
         </section>
 
     </main>
