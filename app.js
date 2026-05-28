@@ -30,6 +30,7 @@ const clearAllButton = document.getElementById('clear-all-button');
 const recipesResultsContainer = document.getElementById('recipes-results-container');
 const ingredientSearch = document.getElementById('ingredient-search');
 const favToggle = document.getElementById('fav-toggle');
+const mobileFabBadge = document.getElementById('mobile-fab-badge');
 
 // Sökelement för recepttitlar
 const recipeSearchInput = document.getElementById('recipeSearchInput');
@@ -136,6 +137,7 @@ function hanteraKlickRad(ingrediensName) {
     // Rita om ingredienslistan så att den klickade ingrediensen försvinner därifrån
     ritaUtAvailableIngredienser();
     uppdateraMobilVisaKnappStatus();
+    uppdateraMobilFabBadge();
 }
 
 // 4. Uppdatera gränssnittet för valda ingredienser (Tags)
@@ -161,6 +163,15 @@ function uppdateraValdaIngredienserUI() {
         tag.appendChild(removeButton);
         selectedIngredientsList.appendChild(tag);
     });
+    // Kolla om listan med ingredienser faktiskt är full och skrollar
+    // Vi lägger en minimal fördröjning (setTimeout) så att webbläsaren hinner rita ut taggarna först
+    setTimeout(() => {
+        if (selectedIngredientsList.scrollHeight > selectedIngredientsList.clientHeight) {
+            selectedIngredientsList.classList.add('has-overflow'); // Slå på faden
+        } else {
+            selectedIngredientsList.classList.remove('has-overflow'); // Göm faden
+        }
+    }, 10);
 }
 
 // NYTT: Aktivera eller inaktivera "Visa recept"-knappen på mobilen
@@ -169,6 +180,20 @@ function uppdateraMobilVisaKnappStatus() {
     if (mobilVisaBtn) {
         // Om valdaIngredienser har element (längd > 0), sätt disabled till false (aktiverad)
         mobilVisaBtn.disabled = valdaIngredienser.length === 0;
+    }
+}
+
+// NY FUNKTION: Uppdaterar den röda iPhone-notifikationen på FAB-knappen
+function uppdateraMobilFabBadge() {
+    if (!mobileFabBadge) return;
+
+    const antal = valdaIngredienser.length;
+
+    if (antal > 0) {
+        mobileFabBadge.textContent = antal;
+        mobileFabBadge.classList.remove('is-hidden'); // Visa badgen
+    } else {
+        mobileFabBadge.classList.add('is-hidden'); // Göm badgen om 0
     }
 }
 
@@ -185,6 +210,7 @@ function taBortTag(ingrediensName) {
     uppdateraReceptLista(); // Uppdatera listan efter borttagning
     ritaUtAvailableIngredienser();
     uppdateraMobilVisaKnappStatus();
+    uppdateraMobilFabBadge();
 }
 
 // 6. Rensa alla val (Clear all)
@@ -197,6 +223,7 @@ clearAllButton.addEventListener('click', () => {
     uppdateraReceptLista(); // Uppdatera listan så att allt visar 0% igen
     ritaUtAvailableIngredienser();
     uppdateraMobilVisaKnappStatus();
+    uppdateraMobilFabBadge();
 });
 
 // ========================================
@@ -361,11 +388,12 @@ receptKort.appendChild(headerFlex);
         const tidContainer = document.createElement('div');
         tidContainer.className = 'tid-container';
 
+        // ÄNDRA TILL DETTA:
         tidContainer.innerHTML = `
-            <svg class="tid-ikon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin='round' stroke-width='2' d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
-            </svg>
-            <span>${recept.tid}</span>
+        <svg class="tid-ikon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin='round' stroke-width='2' d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+        </svg>
+        <span>${recept.tid.charAt(0).toUpperCase() + recept.tid.slice(1)}</span>
         `;
 
         footer.appendChild(tidContainer);
@@ -423,24 +451,113 @@ window.addEventListener('click', (e) => {
     }
 });
 
-// Lägg till nytt ingrediensfält i formuläret
+// ===================================================
+// DYNAMISKA RADER MED SMARTA KRYSS I FORMULÄRET
+// ===================================================
+
+// Hjälpfunktion som styr om kryssen ska synas eller inte
+function uppdateraFormulärKryss() {
+    // 1. Hantera ingredienser
+    const ingrediensRader = formIngredientsList.querySelectorAll('.form-dynamic-row');
+    ingrediensRader.forEach(rad => {
+        const kryssBtn = rad.querySelector('.form-row-remove-btn');
+        if (ingrediensRader.length > 1) {
+            kryssBtn.classList.remove('hidden'); // Visa kryss om det finns fler än 1 rad
+        } else {
+            kryssBtn.classList.add('hidden');    // Göm kryss om det bara är 1 rad kvar
+        }
+    });
+
+    // 2. Hantera instruktionssteg
+    const stegRader = formStepsList.querySelectorAll('.form-dynamic-row');
+    stegRader.forEach((rad, index) => {
+        const kryssBtn = rad.querySelector('.form-row-remove-btn');
+        const input = rad.querySelector('.form-step-input');
+        
+        // Uppdatera samtidigt numreringen på alla placeholders live!
+        input.placeholder = `Steg ${index + 1}: T.ex. Rör om`;
+
+        if (stegRader.length > 1) {
+            kryssBtn.classList.remove('hidden'); // Visa kryss om det finns fler än 1 rad
+        } else {
+            kryssBtn.classList.add('hidden');    // Göm kryss om det bara är 1 rad kvar
+        }
+    });
+}
+
+// 1. Klick på "+ Lägg till ingrediens"
 addFormIngredientBtn.addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'form-dynamic-row';
+
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'form-ingredient-input';
     input.placeholder = 'T.ex. Mjölk';
-    formIngredientsList.appendChild(input);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'form-row-remove-btn';
+    removeBtn.innerHTML = '&times;';
+    
+    // När man raderar en rad, ta bort den och räkna omedelbart om kryssen!
+    removeBtn.addEventListener('click', () => {
+        row.remove();
+        uppdateraFormulärKryss();
+    });
+
+    row.appendChild(input);
+    row.appendChild(removeBtn);
+    formIngredientsList.appendChild(row);
+    
+    // Räkna om kryssen eftersom vi har lagt till en ny rad
+    uppdateraFormulärKryss();
 });
 
-// Lägg till nytt instruktionssteg i formuläret
+// 2. Klick på "+ Lägg till steg"
 addFormStepBtn.addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'form-dynamic-row';
+
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'form-step-input';
-    const stegNummer = formStepsList.getElementsByTagName('input').length + 1;
-    input.placeholder = `Steg ${stegNummer}: T.ex. Rör om`;
-    formStepsList.appendChild(input);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'form-row-remove-btn';
+    removeBtn.innerHTML = '&times;';
+    
+    removeBtn.addEventListener('click', () => {
+        row.remove();
+        uppdateraFormulärKryss();
+    });
+
+    row.appendChild(input);
+    row.appendChild(removeBtn);
+    formStepsList.appendChild(row);
+    
+    // Räkna om kryssen och placeholders eftersom vi har lagt till en ny rad
+    uppdateraFormulärKryss();
 });
+
+// 3. Aktivera lyssnare på de allra första startkryssen som redan finns i HTML
+function kopplaInitialaFormulärKryss() {
+    const allaBefintligaKryss = recipeForm.querySelectorAll('.form-row-remove-btn');
+    allaBefintligaKryss.forEach(knapp => {
+        knapp.addEventListener('click', (e) => {
+            const raden = e.target.closest('.form-dynamic-row');
+            if (raden) {
+                raden.remove();
+                uppdateraFormulärKryss();
+            }
+        });
+    });
+}
+
+// Kör igång systemet en första gång för att gömma kryssen vid start (eftersom det bara är 1 rad då)
+kopplaInitialaFormulärKryss();
+uppdateraFormulärKryss();
 
 // Hantera när formuläret skickas (Spara recept)
 recipeForm.addEventListener('submit', async (e) => {
@@ -490,9 +607,24 @@ recipeForm.addEventListener('submit', async (e) => {
     }
     
     // Återställ formuläret och stäng modalen
+    // ÄNDRA TILL DETTA:
     recipeForm.reset();
-    formIngredientsList.innerHTML = '<input type="text" class="form-ingredient-input" required placeholder="T.ex. Ägg">';
-    formStepsList.innerHTML = '<input type="text" class="form-step-input" required placeholder="Steg 1: T.ex. Blanda smeten">';
+    formIngredientsList.innerHTML = `
+        <div class="form-dynamic-row">
+            <input type="text" class="form-ingredient-input" required placeholder="T.ex. Ägg">
+            <button type="button" class="form-row-remove-btn">&times;</button>
+        </div>
+    `;
+    formStepsList.innerHTML = `
+        <div class="form-dynamic-row">
+            <input type="text" class="form-step-input" required placeholder="Steg 1: T.ex. Blanda smeten">
+            <button type="button" class="form-row-remove-btn">&times;</button>
+        </div>
+    `;
+    
+    // Koppla på lyssnarna och göm kryssen på de nya fräscha fälten
+    kopplaInitialaFormulärKryss();
+    uppdateraFormulärKryss();
     recipeModal.classList.add('hidden');
 
     // 7. Uppdatera hela appen så att det nya receptet och dess ingredienser syns direkt!

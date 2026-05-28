@@ -147,8 +147,8 @@ h3 {
 
 .icon-bg {
     /* Storlek (44x44px på mobil/standard) */
-    width: 44px;
-    height: 44px;
+    width: 37px;
+    height: 37px;
 
     /* Centrerar ikonen inuti bubblan (flex items-center justify-center) */
     display: flex;
@@ -159,7 +159,7 @@ h3 {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 
     /* Stora rundade hörn (rounded-2xl = 16px) */
-    border-radius: 16px;
+    border-radius: 12px;
 
     /* Grönaktig skugga (shadow-lg shadow-emerald-600/25) */
     box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.25),
@@ -170,11 +170,9 @@ h3 {
 }
 
 .header-icon {
-    width: 22px;
-    /* Perfekt storlek inuti en 44px/48px bubbla */
-    height: 22px;
+    width: 20px;
+    height: 20px;
     color: white;
-    /* ÄNDRAD: Gör kniven vit så den poppar mot det gröna! */
     flex-shrink: 0;
 }
 
@@ -343,13 +341,45 @@ h3 {
     display: none;
 }
 
-
-
 /* Valda ingredienser (Tags) */
 .tag-list {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+
+    /* BESTÄM HÖJDEN FÖR EXAKT TVÅ RADER:
+       En tag är ca 34px hög + 8px (0.5rem) gap = ca 76px för två rader */
+    max-height: 76px;
+
+    /* Aktivera vertikal skroll om höjden överskrids */
+    overflow-y: auto;
+
+    /* Smidig skrollkänsla på mobiler */
+    -webkit-overflow-scrolling: touch;
+
+    padding-right: 4px;
+    /* Ger lite luft så att skrollistan inte krockar med taggarna */
+}
+
+/* Denna klass läggs till via JS ENDAST när listan faktiskt är full och skrollar */
+.tag-list.has-overflow {
+    mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+}
+
+/* Gör skrollisten supertunn och diskret så den inte ser klumpig ut */
+.tag-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tag-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tag-list::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    /* Ljusgrå diskret färg */
+    border-radius: 4px;
 }
 
 .ingredient-tag {
@@ -753,6 +783,7 @@ h3 {
     border-radius: 8px;
     margin-bottom: 0.5rem;
     font-family: var(--font-body);
+    font-size: 16px;
 }
 
 .secondary-button {
@@ -773,6 +804,10 @@ h3 {
 .save-recipe-btn {
     width: 100%;
     margin-top: 1rem;
+}
+
+.mobile-fab-button {
+    display: none;
 }
 
 /* ========================================
@@ -1156,7 +1191,7 @@ h3 {
     /* Grön ram */
     border-radius: 5rem;
     /* Perfekt runda pill-hörn */
-    padding: 0.5rem 1.25rem;
+    padding: 0.5rem 1rem;
     font-family: var(--font-body);
     font-size: 14px;
     font-weight: 600;
@@ -1177,4 +1212,114 @@ h3 {
 
 .header-main-button:active {
     transform: translateY(0);
+}
+
+/* ========================================
+   NY DESIGN: RÖD NOTIFIKATIONSBADGE PÅ FAB
+======================================== */
+
+.fab-badge {
+    position: absolute;
+    top: -8px;
+    /* Skjuter upp den en bit ovanför knappen */
+    right: -1px;
+    /* Skjuter ut den en bit till höger om knappen */
+    background-color: var(--color-danger, #C70036);
+    /* Intensiv röd färg */
+    color: white;
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 5px;
+    border-radius: 50%;
+    /* Gör den helt rund */
+
+    /* Centrerar siffran inuti den röda cirkeln */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 1010;
+    /* Ligger precis ovanpå knappen */
+
+    /* En subtil pop-animation när siffran ändras */
+    animation: badgeScalePop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Gömmer badgen helt när 0 ingredienser är valda */
+.fab-badge.is-hidden {
+    display: none !important;
+}
+
+@keyframes badgeScalePop {
+    from {
+        transform: scale(0.5);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+/* ========================================
+   FORMULÄR: DYNAMISKA RADER MED KRYSSTORN
+======================================== */
+
+/* Håller ihop textfältet och krysset på samma rad */
+.form-dynamic-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    animation: rowFadeIn 0.2s ease-out;
+}
+
+/* Säkerställer att textfälten fortfarande tar upp maximalt utrymme */
+.form-dynamic-row input {
+    flex: 1;
+    margin-bottom: 0.5rem !important;
+    /* Justerar marginalen så den ligger perfekt i linje */
+}
+
+/* Det lilla smidiga raderingskrysset för rader i formuläret */
+.form-row-remove-btn {
+    color: var(--font-color-secondary);
+    width: 32px;
+    height: 45px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+    /* Matchar inputfältets bottenmarginal */
+    transition: background-color 0.15s ease, color 0.15s ease;
+    flex-shrink: 0;
+    /* Hindrar krysset från att tryckas ihop */
+
+    /* Tar bort den fula blinkande rutan på mobiler (iOS & Android) */
+    -webkit-tap-highlight-color: transparent;
+}
+
+.form-row-remove-btn:hover {
+    background: #e3e7ed;
+    color: #515d6c;
+}
+
+@keyframes rowFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

@@ -120,9 +120,10 @@
                 <div class="form-group">
                     <label>Ingredienser</label>
                     <div id="form-ingredients-list">
-                        <input type="text" class="form-ingredient-input" required
-                            oninvalid="this.setCustomValidity('Fyll i det här fältet.')"
-                            oninput="this.setCustomValidity('')" placeholder="T.ex. Ägg">
+                        <div class="form-dynamic-row">
+                            <input type="text" class="form-ingredient-input" required placeholder="T.ex. Ägg">
+                            <button type="button" class="form-row-remove-btn">&times;</button>
+                        </div>
                     </div>
                     <button type="button" id="add-form-ingredient" class="secondary-button">+ Lägg till
                         ingrediens</button>
@@ -131,9 +132,11 @@
                 <div class="form-group">
                     <label>Instruktioner (steg för steg)</label>
                     <div id="form-steps-list">
-                        <input type="text" class="form-step-input" required
-                            oninvalid="this.setCustomValidity('Fyll i det här fältet.')"
-                            oninput="this.setCustomValidity('')" placeholder="Steg 1: T.ex. Blanda smeten">
+                        <div class="form-dynamic-row">
+                            <input type="text" class="form-step-input" required
+                                placeholder="Steg 1: T.ex. Blanda smeten">
+                            <button type="button" class="form-row-remove-btn">&times;</button>
+                        </div>
                     </div>
                     <button type="button" id="add-form-step" class="secondary-button">+ Lägg till steg</button>
                 </div>
@@ -146,6 +149,7 @@
     <button id="mobile-footer-trigger" class="mobile-fab-button">
         <span class="fab-arrow">▲</span>
         <span class="fab-text">Ingredienser</span>
+        <div id="mobile-fab-badge" class="fab-badge is-hidden">0</div>
     </button>
 
     <script type="module" src="app.js"></script>
