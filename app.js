@@ -110,6 +110,7 @@ function hanteraKlickRad(ingrediensName) {
 
     // Rita om ingredienslistan så att den klickade ingrediensen försvinner därifrån
     ritaUtAvailableIngredienser();
+    uppdateraMobilVisaKnappStatus();
 }
 
 // 4. Uppdatera gränssnittet för valda ingredienser (Tags)
@@ -137,6 +138,15 @@ function uppdateraValdaIngredienserUI() {
     });
 }
 
+// NYTT: Aktivera eller inaktivera "Visa recept"-knappen på mobilen
+function uppdateraMobilVisaKnappStatus() {
+    const mobilVisaBtn = document.getElementById('mobile-show-recipes-btn');
+    if (mobilVisaBtn) {
+        // Om valdaIngredienser har element (längd > 0), sätt disabled till false (aktiverad)
+        mobilVisaBtn.disabled = valdaIngredienser.length === 0;
+    }
+}
+
 // 5. Ta bort en ingrediens via tag-krysset
 function taBortTag(ingrediensName) {
     valdaIngredienser = valdaIngredienser.filter(ingrediens => ingrediens !== ingrediensName);
@@ -149,6 +159,7 @@ function taBortTag(ingrediensName) {
     uppdateraValdaIngredienserUI();
     uppdateraReceptLista(); // Uppdatera listan efter borttagning
     ritaUtAvailableIngredienser();
+    uppdateraMobilVisaKnappStatus();
 }
 
 // 6. Rensa alla val (Clear all)
@@ -160,6 +171,7 @@ clearAllButton.addEventListener('click', () => {
     uppdateraValdaIngredienserUI();
     uppdateraReceptLista(); // Uppdatera listan så att allt visar 0% igen
     ritaUtAvailableIngredienser();
+    uppdateraMobilVisaKnappStatus();
 });
 
 // ========================================
@@ -472,6 +484,19 @@ if (closeIngredientsBox) {
         document.body.style.overflow = ''; 
         
         // Garantera att krysset alltid kan stänga panelen oavsett om man har dragit i den innan
+        ingredientsPanel.style.transform = '';
+    });
+}
+
+// NYTT: Stäng lådan när man klickar på "Visa recept"-knappen i botten
+const mobileShowRecipesBtn = document.getElementById('mobile-show-recipes-btn');
+if (mobileShowRecipesBtn) {
+    mobileShowRecipesBtn.addEventListener('click', () => {
+        ingredientsPanel.classList.remove('is-open');
+        mobileFooterTrigger.classList.remove('panel-active'); 
+        document.body.style.overflow = ''; 
+        
+        // Återställ eventuella kvarhängande transform-stilar från svep-logiken
         ingredientsPanel.style.transform = '';
     });
 }

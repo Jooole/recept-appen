@@ -752,6 +752,11 @@ h3 {
     color: var(--font-color-secondary);
 }
 
+.close-panel-button,
+.mobile-show-btn {
+    display: none;
+}
+
 .close-button:hover {
     color: var(--font-color-primary);
 }
@@ -973,4 +978,55 @@ h3 {
         padding: 1rem;
         /* Mindre och mer kompakt på mobilskärmar! */
     }
-}
+
+    /* NYTT: Styling för "Visa recept"-knappen i botten av mobillådan */
+    /* UPPDATERAD: "Visa recept"-knapp fixerad i botten av mobillådan */
+    .mobile-show-btn {
+        display: block;
+        /* Visas enbart på mobilen */
+
+        /* NYTT: Fixera knappen i botten av panelen */
+        position: absolute;
+        bottom: 16px;
+        left: 16px;
+        width: calc(100% - 32px);
+        /* Tar ut full bredd minus marginalerna */
+        z-index: 10;
+        /* Se till att den ligger ovanpå ingredienserna vid scroll */
+
+        padding: 0.95rem;
+        background-color: var(--color-primary);
+        /* Din gröna färg */
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-family: var(--font-body);
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+
+        /* En lite kraftigare skugga så knappen "lyfter" från ingredienserna bakom */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+        transition: background-color 0.2s ease, opacity 0.2s ease, transform 0.1s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-show-btn:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+
+    .mobile-show-btn:disabled {
+        background-color: #E2E8F0;
+        color: #94A3B8;
+        cursor: not-allowed;
+        opacity: 0.7;
+        box-shadow: none;
+        /* Ingen skugga när den är låst */
+    }
+
+    /* NYTT: Lägg till extra luft i botten av listan så att inte de sista ingredienserna 
+       hamnar dolda bakom den fixerade knappen när man scrollar maximalt nedåt */
+    .panel-inner-section.scrollable-list {
+        padding-bottom: 40px !important;
+    }
