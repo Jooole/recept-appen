@@ -604,6 +604,7 @@ h3 {
     justify-content: space-between;
     /* Detta garanterar att procentbadgen alltid ligger klistrad till höger */
     width: 100%;
+    gap: 8px;
 }
 
 /* Förhindrar textkrockar i kortets header på mobilen */
@@ -1030,3 +1031,4 @@ h3 {
     .panel-inner-section.scrollable-list {
         padding-bottom: 40px !important;
     }
+}

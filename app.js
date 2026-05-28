@@ -1,4 +1,25 @@
-import { receptDatabas } from './recept.js';
+// === LÄGG TILL DETTA ALLRA HÖGST UPP I APP.JS ===
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// Din unika Firebase-konfiguration
+const firebaseConfig = {
+    apiKey: "AIzaSyA_kUcz-8u5rqTtChp8QUGW88Uha72R0bY",
+    authDomain: "koksassistent.firebaseapp.com",
+    projectId: "koksassistent",
+    storageBucket: "koksassistent.firebasestorage.app",
+    messagingSenderId: "1089764018502",
+    appId: "1:1089764018502:web:6b5ddab813f264bb04bd47"
+};
+
+// Starta Firebase och koppla till Firestore
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Skapa en tom lokal array där vi sparar recepten när de laddats ner från molnet
+let receptDatabas = []; 
+// ===============================================
+
 
 // --- HTML ELEMENT ---
 const selectionSubheader = document.getElementById('selection-subheader');
@@ -451,9 +472,41 @@ favToggle.addEventListener('change', (e) => {
     uppdateraReceptLista(); // Rita om listan direkt med det nya filtret!
 });
 
+// === LADDA RECEPT FRÅN DATABASEN I FIREBASE) ===
+async function laddaReceptFrånFirebase() {
+    try {
+        // Hämta alla dokument från samlingen "recept" i din Firestore
+        const querySnapshot = await getDocs(collection(db, "recept"));
+        
+        // Töm arrayen utifall att vi laddar om
+        receptDatabas = [];
+        
+        // Loopa igenom allt vi fick från molnet och tryck in i vår lokala array
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            receptDatabas.push({
+                id: doc.id, // Vi använder Firebases unika dokument-ID som recept-ID!
+                namn: data.namn,
+                tid: data.tid,
+                ingredienser: data.ingredienser,
+                instruktioner: data.instruktioner
+            });
+        });
+
+        console.log(`Lyckades hämta ${receptDatabas.length} recept från Firebase!`);
+        
+        // NU när datan har landat kan vi köra igång gränssnittet!
+        ritaUtAvailableIngredienser();
+        uppdateraReceptLista();
+
+    } catch (error) {
+        console.error("Kunde inte hämta recept från Firebase:", error);
+    }
+}
+
 // --- INITIAL KÖRNING ---
-ritaUtAvailableIngredienser();
-uppdateraReceptLista(); // Körs direkt vid start så alla recept visas på 0%
+// Starta appen genom att först hämta all data från molnet!
+laddaReceptFrånFirebase();
 
 // ===================================================
 // MOBIL-LOGIK (FOOTER-LIST MED EXPANDEBARA INGREDIENSER)
