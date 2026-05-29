@@ -17,7 +17,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // Skapa en tom lokal array där vi sparar recepten när de laddats ner från molnet
-let receptDatabas = []; 
+let receptDatabas = [];
 // ===============================================
 
 
@@ -71,15 +71,15 @@ function hamtaUnikaIngredienser() {
 // 2. Skapa klickbara rader för ingredienserna (Uppdaterad)
 function ritaUtAvailableIngredienser() {
     const unikaIngredienser = hamtaUnikaIngredienser();
-    
+
     // 1. Filtrera bort ingredienser som redan är valda
-    let tillgangligaIngredienser = unikaIngredienser.filter(ingrediens => 
+    let tillgangligaIngredienser = unikaIngredienser.filter(ingrediens =>
         !valdaIngredienser.includes(ingrediens)
     );
 
     // 2. NYTT: Filtrera baserat på vad man skrivit i sökfältet
     // .toLowerCase() gör att sökningen inte bryr sig om stora/små bokstäver
-    tillgangligaIngredienser = tillgangligaIngredienser.filter(ingrediens => 
+    tillgangligaIngredienser = tillgangligaIngredienser.filter(ingrediens =>
         ingrediens.toLowerCase().includes(sokord.toLowerCase())
     );
 
@@ -96,15 +96,15 @@ function ritaUtAvailableIngredienser() {
         checkbox.type = 'checkbox';
         checkbox.value = ingrediens;
         checkbox.id = `check-${ingrediens}`;
-        
+
         // Lägg till den gömda checkboxen inuti labeln
         label.appendChild(checkbox);
 
         // Lyssna på klick på hela label-raden!
         label.addEventListener('click', (e) => {
             // Förhindra att klicket körs dubbelt (eftersom label + gömd input kan krocka vid klick)
-            e.preventDefault(); 
-            
+            e.preventDefault();
+
             // Kör vår modifierade hanterare
             hanteraKlickRad(ingrediens);
         });
@@ -129,7 +129,7 @@ function hanteraKlickRad(ingrediensName) {
         // Om den REDAN finns: Ta bort den (om man klickar på samma rad igen)
         valdaIngredienser.splice(index, 1);
     }
-    
+
     // Uppdatera gränssnittet och räkna om recepten automatiskt
     uppdateraValdaIngredienserUI();
     uppdateraReceptLista();
@@ -159,7 +159,7 @@ function uppdateraValdaIngredienserUI() {
         const removeButton = document.createElement('button');
         removeButton.textContent = '×';
         removeButton.addEventListener('click', () => taBortTag(ingrediensName));
-        
+
         tag.appendChild(removeButton);
         selectedIngredientsList.appendChild(tag);
     });
@@ -200,12 +200,12 @@ function uppdateraMobilFabBadge() {
 // 5. Ta bort en ingrediens via tag-krysset
 function taBortTag(ingrediensName) {
     valdaIngredienser = valdaIngredienser.filter(ingrediens => ingrediens !== ingrediensName);
-    
+
     const checkbox = document.getElementById(`check-${ingrediensName}`);
     if (checkbox) {
         checkbox.checked = false;
     }
-    
+
     uppdateraValdaIngredienserUI();
     uppdateraReceptLista(); // Uppdatera listan efter borttagning
     ritaUtAvailableIngredienser();
@@ -218,7 +218,7 @@ clearAllButton.addEventListener('click', () => {
     valdaIngredienser = [];
     const allCheckboxes = availableIngredientsList.querySelectorAll('input[type="checkbox"]');
     allCheckboxes.forEach(checkbox => checkbox.checked = false);
-    
+
     uppdateraValdaIngredienserUI();
     uppdateraReceptLista(); // Uppdatera listan så att allt visar 0% igen
     ritaUtAvailableIngredienser();
@@ -237,7 +237,7 @@ function uppdateraReceptLista() {
     // 2. NYTT: Filtrera receptDatabas baserat på sökordet INNAN vi räknar procent
     let söktaRecept = receptDatabas;
     if (receptSokord !== '') {
-        söktaRecept = receptDatabas.filter(recept => 
+        söktaRecept = receptDatabas.filter(recept =>
             recept.namn.toLowerCase().includes(receptSokord)
         );
     }
@@ -248,11 +248,11 @@ function uppdateraReceptLista() {
     // 3. ANVÄND 'söktaRecept' ISTÄLLET FÖR 'receptDatabas' HÄR:
     let bearbetadeRecept = söktaRecept.map(recept => {
         // Kontrollera matchning oavsett stora/små bokstäver
-        const matchande = recept.ingredienser.filter(ingrediens => 
+        const matchande = recept.ingredienser.filter(ingrediens =>
             valdaIngredienserLow.includes(ingrediens.toLowerCase())
         );
 
-        const saknade = recept.ingredienser.filter(ingrediens => 
+        const saknade = recept.ingredienser.filter(ingrediens =>
             !valdaIngredienserLow.includes(ingrediens.toLowerCase())
         );
 
@@ -270,7 +270,7 @@ function uppdateraReceptLista() {
 
     // b) Om toggle-knappen är aktiverad, filtrera bort allt som inte är favoritmarkerat
     if (visaBaraFavoriter) {
-        bearbetadeRecept = bearbetadeRecept.filter(recept => 
+        bearbetadeRecept = bearbetadeRecept.filter(recept =>
             favoritRecept.includes(recept.id)
         );
     }
@@ -287,7 +287,7 @@ function uppdateraReceptLista() {
                 <button type="button" class="search-badge-close" id="searchBadgeCloseBtn">&times;</button>
             </div>
         `;
-        
+
         // Gör så att man kan stänga sökningen även genom att klicka på badgens kryss
         document.getElementById('searchBadgeCloseBtn').addEventListener('click', () => {
             recipeSearchInput.value = '';
@@ -299,7 +299,7 @@ function uppdateraReceptLista() {
     }
 
     // e) Rendera ut recepten i HTML
-    recipesResultsContainer.innerHTML = ''; 
+    recipesResultsContainer.innerHTML = '';
 
     bearbetadeRecept.forEach(recept => {
         const receptKort = document.createElement('div');
@@ -316,7 +316,7 @@ function uppdateraReceptLista() {
         headerFlex.className = 'recept-header-flex';
 
         // Skapa rubriken
-        const rubrik = document.createElement('h1'); 
+        const rubrik = document.createElement('h1');
         rubrik.textContent = recept.namn;
 
         // Skapa hjärt-knappen
@@ -339,16 +339,16 @@ function uppdateraReceptLista() {
         });
 
 
-// Skapa procentbadgen
-const procentBadge = document.createElement('div');
-procentBadge.className = `match-badge ${färgKlass}`;
-procentBadge.textContent = `${recept.matchningsProcent}%`;
+        // Skapa procentbadgen
+        const procentBadge = document.createElement('div');
+        procentBadge.className = `match-badge ${färgKlass}`;
+        procentBadge.textContent = `${recept.matchningsProcent}%`;
 
-// LÄGG TILL ALLT DIREKT I HEADER-FLEX (Ordningen bestämmer placeringen!)
-headerFlex.appendChild(rubrik);       /* Rubrik hamnar till vänster */
-headerFlex.appendChild(procentBadge); /* Procentbadgen ligger kvar längst till höger */
+        // LÄGG TILL ALLT DIREKT I HEADER-FLEX (Ordningen bestämmer placeringen!)
+        headerFlex.appendChild(rubrik);       /* Rubrik hamnar till vänster */
+        headerFlex.appendChild(procentBadge); /* Procentbadgen ligger kvar längst till höger */
 
-receptKort.appendChild(headerFlex);
+        receptKort.appendChild(headerFlex);
 
         // 3. Visa saknade ingredienser om det behövs
         if (recept.matchningsProcent < 100 && valdaIngredienser.length > 0) {
@@ -361,11 +361,11 @@ receptKort.appendChild(headerFlex);
             saknadeContainer.appendChild(saknadeTitel);
 
             recept.saknadeIngredienser.forEach(ingrediens => {
-    const badge = document.createElement('span');
-    badge.className = 'saknad-badge';
-    badge.textContent = ingrediens; // Endast denna rad behövs!
-    saknadeContainer.appendChild(badge);
-});
+                const badge = document.createElement('span');
+                badge.className = 'saknad-badge';
+                badge.textContent = ingrediens; // Endast denna rad behövs!
+                saknadeContainer.appendChild(badge);
+            });
 
             receptKort.appendChild(saknadeContainer);
         }
@@ -397,12 +397,12 @@ receptKort.appendChild(headerFlex);
         `;
 
         footer.appendChild(tidContainer);
-        
+
         // RÄTT PLACERING: Lägg till hjärtat i footern (det hamnar till höger om tiden)
-        footer.appendChild(favBtn); 
+        footer.appendChild(favBtn);
 
         // Spika fast footern i själva receptkortet
-        receptKort.appendChild(footer); 
+        receptKort.appendChild(footer);
 
         recipesResultsContainer.appendChild(receptKort);
     });
@@ -422,7 +422,7 @@ ingredientSearch.addEventListener('input', (e) => {
 if (openModalBtn) {
     openModalBtn.addEventListener('click', () => {
         recipeModal.classList.remove('hidden');
-        
+
         // NYTT: Göm FAB-knappen när modalen öppnas
         const fabButton = document.getElementById('mobile-footer-trigger');
         if (fabButton) {
@@ -435,7 +435,7 @@ if (openModalBtn) {
 if (closeModalBtn) {
     closeModalBtn.addEventListener('click', () => {
         recipeModal.classList.add('hidden');
-        
+
         // NYTT: Visa FAB-knappen igen när modalen stängs (endast om vi är på mobil)
         const fabButton = document.getElementById('mobile-footer-trigger');
         if (fabButton && window.innerWidth <= 768) {
@@ -473,7 +473,7 @@ function uppdateraFormulärKryss() {
     stegRader.forEach((rad, index) => {
         const kryssBtn = rad.querySelector('.form-row-remove-btn');
         const input = rad.querySelector('.form-step-input');
-        
+
         // Uppdatera samtidigt numreringen på alla placeholders live!
         input.placeholder = `Steg ${index + 1}: T.ex. Rör om`;
 
@@ -499,7 +499,7 @@ addFormIngredientBtn.addEventListener('click', () => {
     removeBtn.type = 'button';
     removeBtn.className = 'form-row-remove-btn';
     removeBtn.innerHTML = '&times;';
-    
+
     // När man raderar en rad, ta bort den och räkna omedelbart om kryssen!
     removeBtn.addEventListener('click', () => {
         row.remove();
@@ -509,7 +509,7 @@ addFormIngredientBtn.addEventListener('click', () => {
     row.appendChild(input);
     row.appendChild(removeBtn);
     formIngredientsList.appendChild(row);
-    
+
     // Räkna om kryssen eftersom vi har lagt till en ny rad
     uppdateraFormulärKryss();
 });
@@ -527,7 +527,7 @@ addFormStepBtn.addEventListener('click', () => {
     removeBtn.type = 'button';
     removeBtn.className = 'form-row-remove-btn';
     removeBtn.innerHTML = '&times;';
-    
+
     removeBtn.addEventListener('click', () => {
         row.remove();
         uppdateraFormulärKryss();
@@ -536,7 +536,7 @@ addFormStepBtn.addEventListener('click', () => {
     row.appendChild(input);
     row.appendChild(removeBtn);
     formStepsList.appendChild(row);
-    
+
     // Räkna om kryssen och placeholders eftersom vi har lagt till en ny rad
     uppdateraFormulärKryss();
 });
@@ -593,10 +593,10 @@ recipeForm.addEventListener('submit', async (e) => {
         // Skicka upp objektet till din samling "recept" i Firestore
         const docRef = await addDoc(collection(db, "recept"), nyttRecept);
         console.log("Recept sparat i Firebase med ID: ", docRef.id);
-        
+
         // Lägg även till det i vår lokala array så det syns på skärmen direkt utan reload
         receptDatabas.push(nyttRecept);
-        
+
         // Uppdatera sökfältets placeholder live med det nya antalet recept
         if (typeof recipeSearchInput !== 'undefined' && recipeSearchInput) {
             recipeSearchInput.placeholder = `Sök bland ${receptDatabas.length} recept`;
@@ -605,7 +605,7 @@ recipeForm.addEventListener('submit', async (e) => {
         console.error("Kunde inte spara receptet till Firebase: ", error);
         alert("Ett fel uppstod när receptet skulle sparas i molnet.");
     }
-    
+
     // Återställ formuläret och stäng modalen
     // ÄNDRA TILL DETTA:
     recipeForm.reset();
@@ -621,7 +621,7 @@ recipeForm.addEventListener('submit', async (e) => {
             <button type="button" class="form-row-remove-btn">&times;</button>
         </div>
     `;
-    
+
     // Koppla på lyssnarna och göm kryssen på de nya fräscha fälten
     kopplaInitialaFormulärKryss();
     uppdateraFormulärKryss();
@@ -635,13 +635,13 @@ recipeForm.addEventListener('submit', async (e) => {
 // NY FUNKTION: Lägg till eller ta bort recept-id från favorit-listan
 function hanteraFavoritKlick(receptId) {
     const index = favoritRecept.indexOf(receptId);
-    
+
     if (index === -1) {
         favoritRecept.push(receptId); // Lägg till om det inte fanns
     } else {
         favoritRecept.splice(index, 1); // Ta bort om det redan fanns
     }
-    
+
     // Rita omedelbart om listan så att hjärtat ändrar färg (eller försvinner om filtret är på)
     uppdateraReceptLista();
 }
@@ -664,8 +664,8 @@ recipeSearchInput.addEventListener('input', () => {
     } else {
         searchCloseBtn.classList.add('is-hidden');
     }
-    
-    uppdateraReceptLista(); 
+
+    uppdateraReceptLista();
 });
 
 // 2. Det runda krysset inuti sökrutan: Tömmer fältet och återställer listan helt
@@ -673,7 +673,7 @@ searchCloseBtn.addEventListener('click', () => {
     recipeSearchInput.value = '';
     searchCloseBtn.classList.add('is-hidden'); // Göm krysset igen eftersom fältet blev tomt
     recipeSearchInput.focus(); // Behåll pekaren i fältet för smidig UX
-    uppdateraReceptLista(); 
+    uppdateraReceptLista();
 });
 
 // === LADDA RECEPT FRÅN DATABASEN I FIREBASE) ===
@@ -681,10 +681,10 @@ async function laddaReceptFrånFirebase() {
     try {
         // Hämta alla dokument från samlingen "recept" i din Firestore
         const querySnapshot = await getDocs(collection(db, "recept"));
-        
+
         // Töm arrayen utifall att vi laddar om
         receptDatabas = [];
-        
+
         // Loopa igenom allt vi fick från molnet och tryck in i vår lokala array
         querySnapshot.forEach((doc) => {
             const data = doc.data();
@@ -701,7 +701,7 @@ async function laddaReceptFrånFirebase() {
 
         // Uppdatera sökrutans placeholder med det exakta antalet recept från Firebase
         recipeSearchInput.placeholder = `Sök bland ${receptDatabas.length} recept`;
-        
+
         // NU när datan har landat kan vi köra igång gränssnittet!
         ritaUtAvailableIngredienser();
         uppdateraReceptLista();
@@ -712,8 +712,10 @@ async function laddaReceptFrånFirebase() {
 }
 
 // --- INITIAL KÖRNING ---
-// Starta appen genom att först hämta all data från molnet!
-laddaReceptFrånFirebase();
+// Starta appen först när webbläsaren garanterat har laddat klart all HTML!
+document.addEventListener('DOMContentLoaded', () => {
+    laddaReceptFrånFirebase();
+});
 
 // ===================================================
 // MOBIL-LOGIK (FOOTER-LIST MED EXPANDEBARA INGREDIENSER)
@@ -727,10 +729,10 @@ if (mobileFooterTrigger) {
     mobileFooterTrigger.addEventListener('click', () => {
         // Sätt tillbaka grundanimationen inför öppningen
         ingredientsPanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-        
+
         ingredientsPanel.classList.add('is-open');
-        mobileFooterTrigger.classList.add('panel-active'); 
-        document.body.style.overflow = 'hidden'; 
+        mobileFooterTrigger.classList.add('panel-active');
+        document.body.style.overflow = 'hidden';
     });
 }
 
@@ -738,11 +740,11 @@ if (mobileFooterTrigger) {
 // === UPPDATERA DENNA FUNKTION I APP.JS ===
 if (closeIngredientsBox) {
     closeIngredientsBox.addEventListener('click', (e) => {
-        e.stopPropagation(); 
+        e.stopPropagation();
         ingredientsPanel.classList.remove('is-open');
-        mobileFooterTrigger.classList.remove('panel-active'); 
-        document.body.style.overflow = ''; 
-        
+        mobileFooterTrigger.classList.remove('panel-active');
+        document.body.style.overflow = '';
+
         // Garantera att krysset alltid kan stänga panelen oavsett om man har dragit i den innan
         ingredientsPanel.style.transform = '';
     });
@@ -753,9 +755,9 @@ const mobileShowRecipesBtn = document.getElementById('mobile-show-recipes-btn');
 if (mobileShowRecipesBtn) {
     mobileShowRecipesBtn.addEventListener('click', () => {
         ingredientsPanel.classList.remove('is-open');
-        mobileFooterTrigger.classList.remove('panel-active'); 
-        document.body.style.overflow = ''; 
-        
+        mobileFooterTrigger.classList.remove('panel-active');
+        document.body.style.overflow = '';
+
         // Återställ eventuella kvarhängande transform-stilar från svep-logiken
         ingredientsPanel.style.transform = '';
     });
@@ -775,7 +777,7 @@ let isDragging = false;
 function onTouchStart(e) {
     startY = e.touches[0].clientY;
     isDragging = true;
-    
+
     // Ta tillfälligt bort CSS-transitionen så att panelen följer fingret direkt utan fördröjning
     ingredientsPanel.style.transition = 'none';
 }
@@ -783,10 +785,10 @@ function onTouchStart(e) {
 // Funktion som körs hela tiden när användaren drar fingret
 function onTouchMove(e) {
     if (!isDragging) return;
-    
+
     currentY = e.touches[0].clientY;
     const deltaY = currentY - startY; // Hur många pixlar fingret har rört sig nedåt
-    
+
     // Tillåt bara att man drar NEDÅT (deltaY > 0)
     if (deltaY > 0) {
         ingredientsPanel.style.transform = `translateY(${deltaY}px)`;
@@ -797,12 +799,12 @@ function onTouchMove(e) {
 function onTouchEnd() {
     if (!isDragging) return;
     isDragging = false;
-    
+
     // Sätt tillbaka CSS-transitionen så panelen animeras snyggt när vi släpper
     ingredientsPanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-    
+
     const deltaY = currentY - startY;
-    
+
     // UX-Gräns: Om man dragit ner mer än 100px stänger vi panelen, annars återställer vi den
     if (deltaY > 200) {
         ingredientsPanel.classList.remove('is-open');
@@ -813,7 +815,7 @@ function onTouchEnd() {
         // Ångrat drag – glid tillbaka upp till toppen
         ingredientsPanel.style.transform = '';
     }
-    
+
     // Nollställ positionerna inför nästa svep
     startY = 0;
     currentY = 0;
