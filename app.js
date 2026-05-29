@@ -31,6 +31,7 @@ const recipesResultsContainer = document.getElementById('recipes-results-contain
 const ingredientSearch = document.getElementById('ingredient-search');
 const favToggle = document.getElementById('fav-toggle');
 const mobileFabBadge = document.getElementById('mobile-fab-badge');
+const loadingSpinner = document.getElementById('loading-spinner');
 
 // Sökelement för recepttitlar
 const recipeSearchInput = document.getElementById('recipeSearchInput');
@@ -706,16 +707,23 @@ async function laddaReceptFrånFirebase() {
         ritaUtAvailableIngredienser();
         uppdateraReceptLista();
 
+        // Göm loading spinnern när allt gränssnitt har ritats ut!
+        if (loadingSpinner) {
+            loadingSpinner.classList.add('hidden');
+        }
+
     } catch (error) {
         console.error("Kunde inte hämta recept från Firebase:", error);
+        // Göm loading spinnern även vid fel så appen inte låser sig
+        if (loadingSpinner) {
+            loadingSpinner.classList.add('hidden');
+        }
     }
 }
 
 // --- INITIAL KÖRNING ---
-// Starta appen först när webbläsaren garanterat har laddat klart all HTML!
-document.addEventListener('DOMContentLoaded', () => {
-    laddaReceptFrånFirebase();
-});
+laddaReceptFrånFirebase();
+
 
 // ===================================================
 // MOBIL-LOGIK (FOOTER-LIST MED EXPANDEBARA INGREDIENSER)
