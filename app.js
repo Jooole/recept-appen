@@ -30,11 +30,16 @@ const clearAllButton = document.getElementById('clear-all-button');
 const recipesResultsContainer = document.getElementById('recipes-results-container');
 const ingredientSearch = document.getElementById('ingredient-search');
 const favToggle = document.getElementById('fav-toggle');
-const mobileFabBadge = document.getElementById('mobile-fab-badge');
-const loadingSpinner = document.getElementById('loading-spinner');
+let mobileFabBadge = null;
+let loadingSpinner = null;
+let mobileFooterTrigger = null;
+let closeIngredientsBox = null;
+let ingredientsPanel = null;
+let panelHeader = null;
+let dragHandle = null;
 
 // Sökelement för recepttitlar
-const recipeSearchInput = document.getElementById('recipeSearchInput');
+let recipeSearchInput = null;
 const searchCloseBtn = document.getElementById('searchCloseBtn');
 const searchBadgeContainer = document.getElementById('search-badge-container');
 
@@ -328,6 +333,13 @@ function uppdateraReceptLista() {
         if (ärFavorit) {
             favBtn.classList.add('is-favorite');
         }
+
+        // UPPDATERAD RAD: Se till att fill-färgen blir 'currentColor' (röd) direkt om det är en favorit!
+        favBtn.innerHTML = `
+            <svg class="fav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${ärFavorit ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+            </svg>
+        `;
 
         favBtn.innerHTML = `
             <svg class="fav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${ärFavorit ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
@@ -643,6 +655,9 @@ function hanteraFavoritKlick(receptId) {
         favoritRecept.splice(index, 1); // Ta bort om det redan fanns
     }
 
+    // Spara hela den uppdaterade favoritlistan lokalt i webbläsaren som textsträng
+    localStorage.setItem('receptFavoriter', JSON.stringify(favoritRecept));
+
     // Rita omedelbart om listan så att hjärtat ändrar färg (eller försvinner om filtret är på)
     uppdateraReceptLista();
 }
@@ -651,30 +666,6 @@ function hanteraFavoritKlick(receptId) {
 favToggle.addEventListener('change', (e) => {
     visaBaraFavoriter = e.target.checked; // Sätt till true eller false beroende på om den är ikryssad
     uppdateraReceptLista(); // Rita om listan direkt med det nya filtret!
-});
-
-// ========================================
-// RECEPT-SÖK LOGIK
-// ========================================
-
-// 1. Lyssna live när användaren skriver i sökfältet
-recipeSearchInput.addEventListener('input', () => {
-    // Visa det lilla runda krysset inuti sökrutan om det finns text, annars göm det
-    if (recipeSearchInput.value.trim() !== '') {
-        searchCloseBtn.classList.remove('is-hidden');
-    } else {
-        searchCloseBtn.classList.add('is-hidden');
-    }
-
-    uppdateraReceptLista();
-});
-
-// 2. Det runda krysset inuti sökrutan: Tömmer fältet och återställer listan helt
-searchCloseBtn.addEventListener('click', () => {
-    recipeSearchInput.value = '';
-    searchCloseBtn.classList.add('is-hidden'); // Göm krysset igen eftersom fältet blev tomt
-    recipeSearchInput.focus(); // Behåll pekaren i fältet för smidig UX
-    uppdateraReceptLista();
 });
 
 // === LADDA RECEPT FRÅN DATABASEN I FIREBASE) ===
@@ -721,119 +712,141 @@ async function laddaReceptFrånFirebase() {
     }
 }
 
-// --- INITIAL KÖRNING ---
-laddaReceptFrånFirebase();
-
-
 // ===================================================
 // MOBIL-LOGIK (FOOTER-LIST MED EXPANDEBARA INGREDIENSER)
 // ===================================================
-const mobileFooterTrigger = document.getElementById('mobile-footer-trigger');
-const closeIngredientsBox = document.getElementById('close-ingredients-box');
-const ingredientsPanel = document.getElementById('ingredients-panel');
+function initieraMobilLogik() {
+    mobileFooterTrigger = document.getElementById('mobile-footer-trigger');
+    closeIngredientsBox = document.getElementById('close-ingredients-box');
+    ingredientsPanel = document.getElementById('ingredients-panel');
 
-// Funktion för att öppna lådan
-if (mobileFooterTrigger) {
-    mobileFooterTrigger.addEventListener('click', () => {
-        // Sätt tillbaka grundanimationen inför öppningen
+    // Funktion för att öppna lådan
+    if (mobileFooterTrigger) {
+        mobileFooterTrigger.addEventListener('click', () => {
+            ingredientsPanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+            ingredientsPanel.classList.add('is-open');
+            mobileFooterTrigger.classList.add('panel-active');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    // Funktion för att stänga lådan
+    if (closeIngredientsBox) {
+        closeIngredientsBox.addEventListener('click', (e) => {
+            e.stopPropagation();
+            ingredientsPanel.classList.remove('is-open');
+            mobileFooterTrigger.classList.remove('panel-active');
+            document.body.style.overflow = '';
+            ingredientsPanel.style.transform = '';
+        });
+    }
+
+    // Stäng lådan när man klickar på "Visa recept"-knappen i botten
+    const mobileShowRecipesBtn = document.getElementById('mobile-show-recipes-btn');
+    if (mobileShowRecipesBtn) {
+        mobileShowRecipesBtn.addEventListener('click', () => {
+            ingredientsPanel.classList.remove('is-open');
+            mobileFooterTrigger.classList.remove('panel-active');
+            document.body.style.overflow = '';
+            ingredientsPanel.style.transform = '';
+        });
+    }
+
+    // ===================================================
+    // SVEP-LOGIK (SWIPE TO CLOSE) FÖR INGREDIENSLÅDAN
+    // ===================================================
+    const panelHeader = ingredientsPanel ? ingredientsPanel.querySelector('.panel-header') : null;
+    const dragHandle = ingredientsPanel ? ingredientsPanel.querySelector('.drag-handle') : null;
+
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+
+    function onTouchStart(e) {
+        startY = e.touches[0].clientY;
+        isDragging = true;
+        ingredientsPanel.style.transition = 'none';
+    }
+
+    function onTouchMove(e) {
+        if (!isDragging) return;
+        currentY = e.touches[0].clientY;
+        const deltaY = currentY - startY;
+        if (deltaY > 0) {
+            ingredientsPanel.style.transform = `translateY(${deltaY}px)`;
+        }
+    }
+
+    function onTouchEnd() {
+        if (!isDragging) return;
+        isDragging = false;
         ingredientsPanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+        const deltaY = currentY - startY;
 
-        ingredientsPanel.classList.add('is-open');
-        mobileFooterTrigger.classList.add('panel-active');
-        document.body.style.overflow = 'hidden';
-    });
-}
+        if (deltaY > 200) {
+            ingredientsPanel.classList.remove('is-open');
+            mobileFooterTrigger.classList.remove('panel-active');
+            document.body.style.overflow = '';
+            ingredientsPanel.style.transform = '';
+        } else {
+            ingredientsPanel.style.transform = '';
+        }
+        startY = 0;
+        currentY = 0;
+    }
 
-// Funktion för att stänga lådan
-// === UPPDATERA DENNA FUNKTION I APP.JS ===
-if (closeIngredientsBox) {
-    closeIngredientsBox.addEventListener('click', (e) => {
-        e.stopPropagation();
-        ingredientsPanel.classList.remove('is-open');
-        mobileFooterTrigger.classList.remove('panel-active');
-        document.body.style.overflow = '';
-
-        // Garantera att krysset alltid kan stänga panelen oavsett om man har dragit i den innan
-        ingredientsPanel.style.transform = '';
-    });
-}
-
-// NYTT: Stäng lådan när man klickar på "Visa recept"-knappen i botten
-const mobileShowRecipesBtn = document.getElementById('mobile-show-recipes-btn');
-if (mobileShowRecipesBtn) {
-    mobileShowRecipesBtn.addEventListener('click', () => {
-        ingredientsPanel.classList.remove('is-open');
-        mobileFooterTrigger.classList.remove('panel-active');
-        document.body.style.overflow = '';
-
-        // Återställ eventuella kvarhängande transform-stilar från svep-logiken
-        ingredientsPanel.style.transform = '';
-    });
-}
-
-// ===================================================
-// SVEP-LOGIK (SWIPE TO CLOSE) FÖR INGREDIENSLÅDAN
-// ===================================================
-const panelHeader = ingredientsPanel ? ingredientsPanel.querySelector('.panel-header') : null;
-const dragHandle = ingredientsPanel ? ingredientsPanel.querySelector('.drag-handle') : null;
-
-let startY = 0;
-let currentY = 0;
-let isDragging = false;
-
-// Funktion som startar när användaren sätter ner fingret på headern eller strecket
-function onTouchStart(e) {
-    startY = e.touches[0].clientY;
-    isDragging = true;
-
-    // Ta tillfälligt bort CSS-transitionen så att panelen följer fingret direkt utan fördröjning
-    ingredientsPanel.style.transition = 'none';
-}
-
-// Funktion som körs hela tiden när användaren drar fingret
-function onTouchMove(e) {
-    if (!isDragging) return;
-
-    currentY = e.touches[0].clientY;
-    const deltaY = currentY - startY; // Hur många pixlar fingret har rört sig nedåt
-
-    // Tillåt bara att man drar NEDÅT (deltaY > 0)
-    if (deltaY > 0) {
-        ingredientsPanel.style.transform = `translateY(${deltaY}px)`;
+    if (panelHeader && dragHandle) {
+        [panelHeader, dragHandle].forEach(element => {
+            element.addEventListener('touchstart', onTouchStart, { passive: true });
+            element.addEventListener('touchmove', onTouchMove, { passive: true });
+            element.addEventListener('touchend', onTouchEnd);
+        });
     }
 }
 
-// Funktion som körs när användaren lyfter fingret
-function onTouchEnd() {
-    if (!isDragging) return;
-    isDragging = false;
+// ===================================================
+// INITIAL KÖRNING
+// ===================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Hämta elementen nu när vi är garanterade att de existerar i HTML
+    loadingSpinner = document.getElementById('loading-spinner');
+    recipeSearchInput = document.getElementById('recipeSearchInput');
+    mobileFabBadge = document.getElementById('mobile-fab-badge');
 
-    // Sätt tillbaka CSS-transitionen så panelen animeras snyggt när vi släpper
-    ingredientsPanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-
-    const deltaY = currentY - startY;
-
-    // UX-Gräns: Om man dragit ner mer än 100px stänger vi panelen, annars återställer vi den
-    if (deltaY > 200) {
-        ingredientsPanel.classList.remove('is-open');
-        mobileFooterTrigger.classList.remove('panel-active');
-        document.body.style.overflow = '';
-        ingredientsPanel.style.transform = '';
-    } else {
-        // Ångrat drag – glid tillbaka upp till toppen
-        ingredientsPanel.style.transform = '';
+    // Kolla om det finns sparade favoriter i webbläsarens minne sedan tidigare
+    const sparadeFavoriter = localStorage.getItem('receptFavoriter');
+    if (sparadeFavoriter) {
+        // Gör om textsträngen till en JavaScript-array igen och stoppa in den i favoritRecept
+        favoritRecept = JSON.parse(sparadeFavoriter);
     }
 
-    // Nollställ positionerna inför nästa svep
-    startY = 0;
-    currentY = 0;
-}
+    // Aktivera mobil- och svep-lyssnarna i en säker ordning
+    initieraMobilLogik();
 
-// Koppla touch-händelserna till både det lilla strecket och hela headern
-if (panelHeader && dragHandle) {
-    [panelHeader, dragHandle].forEach(element => {
-        element.addEventListener('touchstart', onTouchStart, { passive: true });
-        element.addEventListener('touchmove', onTouchMove, { passive: true });
-        element.addEventListener('touchend', onTouchEnd);
+    // ========================================
+    // RECEPT-SÖK LOGIK
+    // ========================================
+
+    // 1. Lyssna live när användaren skriver i sökfältet
+    recipeSearchInput.addEventListener('input', () => {
+        // Visa det lilla runda krysset inuti sökrutan om det finns text, annars göm det
+        if (recipeSearchInput.value.trim() !== '') {
+            searchCloseBtn.classList.remove('is-hidden');
+        } else {
+            searchCloseBtn.classList.add('is-hidden');
+        }
+
+        uppdateraReceptLista();
     });
-}
+
+    // 2. Det runda krysset inuti sökrutan: Tömmer fältet och återställer listan helt
+    searchCloseBtn.addEventListener('click', () => {
+        recipeSearchInput.value = '';
+        searchCloseBtn.classList.add('is-hidden'); // Göm krysset igen eftersom fältet blev tomt
+        recipeSearchInput.focus(); // Behåll pekaren i fältet för smidig UX
+        uppdateraReceptLista();
+    });
+
+    // Starta slutligen hämtningen från molnet i en stabil miljö
+    laddaReceptFrånFirebase();
+});
