@@ -1,6 +1,6 @@
 // === LÄGG TILL DETTA ALLRA HÖGST UPP I APP.JS ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Din unika Firebase-konfiguration
 const firebaseConfig = {
@@ -37,6 +37,7 @@ let closeIngredientsBox = null;
 let ingredientsPanel = null;
 let panelHeader = null;
 let dragHandle = null;
+let redigerarReceptId = null; // Håller reda på om vi redigerar ett recept (ID) eller skapar ett nytt (null)
 
 // Sökelement för recepttitlar
 let recipeSearchInput = null;
@@ -61,13 +62,17 @@ let visaBaraFavoriter = false; // Håller reda på om filtret är aktivt
 
 // --- FUNKTIONER ---
 
-// 1. Samla alla unika ingredienser från recepten
+// 1. Samla alla unika ingredienser från recepten (UPPDATERAD FÖR OBJEKT)
 function hamtaUnikaIngredienser() {
     const allaIngredienser = [];
     receptDatabas.forEach(recept => {
         recept.ingredienser.forEach(ingrediens => {
-            if (!allaIngredienser.includes(ingrediens)) {
-                allaIngredienser.push(ingrediens);
+            // Kolla om ingrediensen är ett objekt (nytt recept) eller textsträng (gammalt recept)
+            const namn = typeof ingrediens === 'object' && ingrediens !== null ? ingrediens.namn : ingrediens;
+
+            // Säkerställ att vi fick ut ett giltigt namn innan vi sparar det
+            if (namn && !allaIngredienser.includes(namn)) {
+                allaIngredienser.push(namn);
             }
         });
     });
@@ -251,16 +256,20 @@ function uppdateraReceptLista() {
     // Gör om alla valda ingredienser till små bokstäver en gång för alla inför jämförelsen
     const valdaIngredienserLow = valdaIngredienser.map(i => i.toLowerCase());
 
-    // 3. ANVÄND 'söktaRecept' ISTÄLLET FÖR 'receptDatabas' HÄR:
+    // 3. ANVÄND 'söktaRecept' ISTÄLLET FÖR 'receptDatabas' HÄR: (UPPDATERAD FÖR OBJEKT)
     let bearbetadeRecept = söktaRecept.map(recept => {
         // Kontrollera matchning oavsett stora/små bokstäver
-        const matchande = recept.ingredienser.filter(ingrediens =>
-            valdaIngredienserLow.includes(ingrediens.toLowerCase())
-        );
+        const matchande = recept.ingredienser.filter(ingrediens => {
+            // Kolla om det är ett objekt (nytt recept) eller textsträng (gammalt recept)
+            const namn = typeof ingrediens === 'object' && ingrediens !== null ? ingrediens.namn : ingrediens;
+            return valdaIngredienserLow.includes(namn.toLowerCase());
+        });
 
-        const saknade = recept.ingredienser.filter(ingrediens =>
-            !valdaIngredienserLow.includes(ingrediens.toLowerCase())
-        );
+        const saknade = recept.ingredienser.filter(ingrediens => {
+            // Kolla om ingrediensen är ett objekt (nytt recept) eller textsträng (gammalt recept)
+            const namn = typeof ingrediens === 'object' && ingrediens !== null ? ingrediens.namn : ingrediens;
+            return !valdaIngredienserLow.includes(namn.toLowerCase());
+        });
 
         let procent = 0;
         if (recept.ingredienser.length > 0) {
@@ -383,6 +392,31 @@ function uppdateraReceptLista() {
             receptKort.appendChild(saknadeContainer);
         }
 
+        // --- NYTT: Skapa och visa ingredienslista på receptkortet
+        const ingredientsTitle = document.createElement('h4');
+        ingredientsTitle.textContent = "Ingredienser:";
+        ingredientsTitle.style.marginTop = "1rem";
+        ingredientsTitle.style.marginBottom = "0.5rem";
+        receptKort.appendChild(ingredientsTitle);
+
+        const cardIngredientsList = document.createElement('ul');
+        cardIngredientsList.className = 'recipe-card-ingredients';
+        cardIngredientsList.style.paddingLeft = "1.2rem";
+        cardIngredientsList.style.marginBottom = "1rem";
+
+        recept.ingredienser.forEach(ing => {
+            const li = document.createElement('li');
+
+            // Kolla om ingrediensen är ett objekt (mängd, enhet, namn) eller en gammal textsträng
+            if (typeof ing === 'object' && ing !== null) {
+                li.textContent = `${ing.mangd} ${ing.enhet} ${ing.namn}`;
+            } else {
+                li.textContent = ing; // För gamla recept
+            }
+            cardIngredientsList.appendChild(li);
+        });
+        receptKort.appendChild(cardIngredientsList);
+
         // 4. Skapa den stegvisa instruktionslistan
         const ol = document.createElement('ol');
         ol.style.paddingLeft = '1.25rem';
@@ -411,7 +445,32 @@ function uppdateraReceptLista() {
 
         footer.appendChild(tidContainer);
 
-        // RÄTT PLACERING: Lägg till hjärtat i footern (det hamnar till höger om tiden)
+        // Skapa redigera-knapp (Edit-penna) ---
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-btn';
+        editBtn.style.background = 'none';
+        editBtn.style.border = 'none';
+        editBtn.style.cursor = 'pointer';
+        editBtn.style.marginLeft = 'auto'; // Trycker pennan till höger (och lämnar hjärtat längst ut)
+        editBtn.style.marginRight = '0.5rem';
+        editBtn.style.color = '#94A3B8';
+        editBtn.style.display = 'inline-flex';
+        editBtn.style.alignItems = 'center';
+
+        editBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 20px; height: 20px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+            </svg>
+        `;
+
+        // När man klickar på pennan, kicka igång redigeringsläget!
+        editBtn.addEventListener('click', () => {
+            öppnaReceptFörRedigering(recept);
+        });
+
+        footer.appendChild(editBtn);
+
+        // Lägg till hjärtat i footern (det hamnar till höger om tiden)
         footer.appendChild(favBtn);
 
         // Spika fast footern i själva receptkortet
@@ -448,6 +507,11 @@ if (openModalBtn) {
 if (closeModalBtn) {
     closeModalBtn.addEventListener('click', () => {
         recipeModal.classList.add('hidden');
+
+        // Återställ redigeringsläget om man kryssar rutan
+        redigerarReceptId = null;
+        recipeForm.reset();
+        document.querySelector('.modal-header').textContent = "Lägg till eget recept";
 
         // NYTT: Visa FAB-knappen igen när modalen stängs (endast om vi är på mobil)
         const fabButton = document.getElementById('mobile-footer-trigger');
@@ -498,16 +562,48 @@ function uppdateraFormulärKryss() {
     });
 }
 
-// 1. Klick på "+ Lägg till ingrediens"
+// 1. Klick på "+ Lägg till ingrediens" (UPPDATERAD)
 addFormIngredientBtn.addEventListener('click', () => {
     const row = document.createElement('div');
-    row.className = 'form-dynamic-row';
+    row.className = 'form-dynamic-row ingredient-row'; // NYTT: Lade till ingredient-row
 
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'form-ingredient-input';
-    input.placeholder = 'T.ex. Mjölk';
+    // A. Skapa fältet för Mängd (Nummer)
+    const amountInput = document.createElement('input');
+    amountInput.type = 'number';
+    amountInput.step = 'any';
+    amountInput.className = 'form-ingredient-amount';
+    amountInput.required = true;
+    amountInput.placeholder = 'Mängd';
 
+    // B. Skapa dropdownen för Enhet
+    const unitSelect = document.createElement('select');
+    unitSelect.className = 'form-ingredient-unit';
+    unitSelect.required = true;
+    unitSelect.style.width = '100px';
+    unitSelect.innerHTML = `
+        <option value="" disabled selected>Enhet</option>
+        <option value="st">st</option>
+        <option value="g">g</option>
+        <option value="kg">kg</option>
+        <option value="dl">dl</option>
+        <option value="l">l</option>
+        <option value="msk">msk</option>
+        <option value="tsk">tsk</option>
+        <option value="krm">krm</option>
+        <option value="klyftor">klyftor</option>
+        <option value="burkar">burkar</option>
+        <option value="nypa">nypa</option>
+        <option value="efter smak">efter smak</option>
+    `;
+
+    // C. Skapa fältet för Namn (Text)
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'form-ingredient-input';
+    nameInput.required = true;
+    nameInput.placeholder = 'Ingrediens (t.ex. Mjölk)';
+
+    // D. Skapa raderingsknappen (Krysset)
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'form-row-remove-btn';
@@ -519,8 +615,12 @@ addFormIngredientBtn.addEventListener('click', () => {
         uppdateraFormulärKryss();
     });
 
-    row.appendChild(input);
+    // Lägg till alla delar på raden i exakt rätt ordning
+    row.appendChild(amountInput);
+    row.appendChild(unitSelect);
+    row.appendChild(nameInput);
     row.appendChild(removeBtn);
+
     formIngredientsList.appendChild(row);
 
     // Räkna om kryssen eftersom vi har lagt till en ny rad
@@ -572,6 +672,59 @@ function kopplaInitialaFormulärKryss() {
 kopplaInitialaFormulärKryss();
 uppdateraFormulärKryss();
 
+// --- NY FUNKTION: Öppna modalen och förbered för redigering ---
+function öppnaReceptFörRedigering(recept) {
+    // 1. Sätt vårt state till det recept-ID vi vill ändra
+    redigerarReceptId = recept.id;
+
+    // 2. Ändra rubriken i modalen så användaren fattar att de redigerar
+    document.querySelector('.modal-header').textContent = "Redigera recept";
+
+    // 3. Fyll i namn och tillagningstid
+    document.getElementById('form-recipe-name').value = recept.namn;
+    document.getElementById('form-recipe-time').value = recept.tid;
+
+    // 4. Töm ingredienslistan i formuläret och bygg upp raderna dynamiskt
+    formIngredientsList.innerHTML = '';
+    recept.ingredienser.forEach(ing => {
+        // Vi simulerar ett klick på "+ Lägg till ingrediens"-knappen för att skapa en korrekt uppbyggd rad!
+        addFormIngredientBtn.click();
+
+        // Plocka ut den absolut senaste raden som skapades
+        const senasteRaden = formIngredientsList.lastElementChild;
+
+        // Fyll i värdena (med bakåtkompatibilitet om det är ett gammalt text-recept)
+        if (typeof ing === 'object' && ing !== null) {
+            senasteRaden.querySelector('.form-ingredient-amount').value = ing.mangd;
+            senasteRaden.querySelector('.form-ingredient-unit').value = ing.enhet;
+            senasteRaden.querySelector('.form-ingredient-input').value = ing.namn;
+        } else {
+            senasteRaden.querySelector('.form-ingredient-amount').value = "1";
+            senasteRaden.querySelector('.form-ingredient-unit').value = "st";
+            senasteRaden.querySelector('.form-ingredient-input').value = ing;
+        }
+    });
+
+    // 5. Töm instruktionerna i formuläret och bygg upp raderna dynamiskt
+    formStepsList.innerHTML = '';
+    recept.instruktioner.forEach(steg => {
+        addFormStepBtn.click(); // Simulerar klick på "+ Lägg till steg"
+        const senasteRaden = formStepsList.lastElementChild;
+        senasteRaden.querySelector('.form-step-input').value = steg;
+    });
+
+    // 6. Räkna om kryssen eftersom vi har fyllt listorna
+    kopplaInitialaFormulärKryss();
+    uppdateraFormulärKryss();
+
+    // 7. Öppna modalen
+    recipeModal.classList.remove('hidden');
+
+    // Göm FAB på mobilen
+    const fabButton = document.getElementById('mobile-footer-trigger');
+    if (fabButton) fabButton.style.display = 'none';
+}
+
 // Hantera när formuläret skickas (Spara recept)
 recipeForm.addEventListener('submit', async (e) => {
     e.preventDefault(); // Förhindra att sidan laddas om
@@ -580,11 +733,15 @@ recipeForm.addEventListener('submit', async (e) => {
     const namn = document.getElementById('form-recipe-name').value;
     const tid = document.getElementById('form-recipe-time').value;
 
-    // 2. Samla in alla ingredienser från formuläret och städa bort tomma fält
-    const ingrediensInputs = document.querySelectorAll('.form-ingredient-input');
-    const ingredienser = Array.from(ingrediensInputs)
-        .map(input => input.value.trim())
-        .filter(value => value !== '');
+    // 2. Samla in alla ingredienser (Mängd, Enhet, Namn) från formuläret (UPPDATERAD)
+    const ingredientRows = document.querySelectorAll('.ingredient-row');
+    const ingredienser = Array.from(ingredientRows).map(row => {
+        return {
+            mangd: row.querySelector('.form-ingredient-amount').value.trim(),
+            enhet: row.querySelector('.form-ingredient-unit').value,
+            namn: row.querySelector('.form-ingredient-input').value.trim()
+        };
+    });
 
     // 3. Samla in alla steg från formuläret och städa bort tomma fält
     const stegInputs = document.querySelectorAll('.form-step-input');
@@ -592,48 +749,77 @@ recipeForm.addEventListener('submit', async (e) => {
         .map(input => input.value.trim())
         .filter(value => value !== '');
 
-    // 4. Skapa det nya recept-objektet
-    const nyttRecept = {
-        id: String(receptDatabas.length + 1), // Skapa ett enkelt temporärt ID
+    // 4. Skapa recept-objektet med datan (utan ID till Firebase)
+    const receptData = {
         namn: namn,
         tid: tid,
         ingredienser: ingredienser,
         instruktioner: instruktioner
     };
 
-    // 5. Lägg till i Firebase-molnet
     try {
-        // Skicka upp objektet till din samling "recept" i Firestore
-        const docRef = await addDoc(collection(db, "recept"), nyttRecept);
-        console.log("Recept sparat i Firebase med ID: ", docRef.id);
+        if (redigerarReceptId) {
+            // ===================================================
+            // LÄGE A: UPPDATERA BEFINTLIGT RECEPT
+            // ===================================================
+            const docRef = doc(db, "recept", redigerarReceptId);
+            await updateDoc(docRef, receptData);
+            console.log("Receptet har uppdaterats i Firebase!");
 
-        // Lägg även till det i vår lokala array så det syns på skärmen direkt utan reload
-        receptDatabas.push(nyttRecept);
+            // Uppdatera även i vår lokala array så det syns direkt på skärmen
+            const index = receptDatabas.findIndex(r => r.id === redigerarReceptId);
+            if (index !== -1) {
+                receptDatabas[index] = { id: redigerarReceptId, ...receptData };
+            }
+        } else {
+            // ===================================================
+            // LÄGE B: SKAPA HELT NYTT RECEPT (Din gamla logik)
+            // ===================================================
+            const tillfälligtNyttRecept = {
+                id: String(receptDatabas.length + 1),
+                ...receptData
+            };
+            const docRef = await addDoc(collection(db, "recept"), tillfälligtNyttRecept);
 
-        // Uppdatera sökfältets placeholder live med det nya antalet recept
+            // Uppdatera ID:t lokalt till Firebases riktiga dokument-ID
+            tillfälligtNyttRecept.id = docRef.id;
+            receptDatabas.push(tillfälligtNyttRecept);
+            console.log("Nytt recept sparat i Firebase med ID: ", docRef.id);
+        }
+
+        // Återställ sökrutans placeholder live
         if (typeof recipeSearchInput !== 'undefined' && recipeSearchInput) {
             recipeSearchInput.placeholder = `Sök bland ${receptDatabas.length} recept`;
         }
+
     } catch (error) {
-        console.error("Kunde inte spara receptet till Firebase: ", error);
-        alert("Ett fel uppstod när receptet skulle sparas i molnet.");
+        console.error("Kunde inte spara/uppdatera i Firebase: ", error);
+        alert("Ett fel uppstod när receptet skulle sparas.");
     }
 
     // Återställ formuläret och stäng modalen
-    // ÄNDRA TILL DETTA:
     recipeForm.reset();
-    formIngredientsList.innerHTML = `
-        <div class="form-dynamic-row">
-            <input type="text" class="form-ingredient-input" required placeholder="T.ex. Ägg">
-            <button type="button" class="form-row-remove-btn">&times;</button>
-        </div>
-    `;
+
+    // Återställ redigeringsläget
+    redigerarReceptId = null;
+    document.querySelector('.modal-header').textContent = "Lägg till eget recept";
+
+    // Töm listan och skapa EN ny, korrekt ingrediensrad med mängd och enhet genom att simulera ett klick!
+    formIngredientsList.innerHTML = '';
+    addFormIngredientBtn.click();
+
+    // Töm och återställ instruktionsstegen
     formStepsList.innerHTML = `
         <div class="form-dynamic-row">
             <input type="text" class="form-step-input" required placeholder="Steg 1: T.ex. Blanda smeten">
             <button type="button" class="form-row-remove-btn">&times;</button>
         </div>
     `;
+
+    // Koppla på lyssnarna och göm kryssen på de nya fräscha fälten
+    kopplaInitialaFormulärKryss();
+    uppdateraFormulärKryss();
+    recipeModal.classList.add('hidden');
 
     // Koppla på lyssnarna och göm kryssen på de nya fräscha fälten
     kopplaInitialaFormulärKryss();

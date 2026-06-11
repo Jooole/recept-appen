@@ -484,7 +484,7 @@ h3 {
     transition: transform 0.1s ease, color 0.2s ease;
 
     /* Trycker hjärtat hela vägen till högerkanten i footern */
-    margin-left: auto;
+    margin-left: 1rem;
     margin-right: 0;
     margin-top: 0;
 
@@ -736,7 +736,7 @@ h3 {
     background-color: var(--color-surface);
     padding: 2rem;
     border-radius: 14px;
-    width: 500px;
+    width: 600px;
     max-width: 90%;
     max-height: 85vh;
     overflow-y: auto;
@@ -1322,6 +1322,135 @@ h3 {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* ========================================
+   RECEPTFORMULÄR: INGREDIENSRADER MED MÄNGD & ENHET
+======================================== */
+
+/* Tvinga ingrediensraderna att använda en stabil CSS Grid */
+.form-dynamic-row.ingredient-row {
+    display: grid;
+    /* UPPDATERAD: Mängd krympt till 70px, Enhet till 95px, resten till namnet */
+    grid-template-columns: 70px 75px 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+/* Om raderingsknappen är dold, ändra griden till 3 kolumner och ta bort det sista gap:et! */
+.form-dynamic-row.ingredient-row:has(.form-row-remove-btn.hidden) {
+    grid-template-columns: 70px 95px 1fr;
+}
+
+/* Nollställ den gamla stilen för raderingsknappen inuti ingrediensrader */
+.form-dynamic-row.ingredient-row .form-row-remove-btn {
+    margin-bottom: 0 !important;
+    /* Tar bort knuffen uppåt */
+    height: 42px !important;
+    /* Matchar exakt höjden på inputfälten */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+/* Fullständig styling för mängdfältet (Nummer) */
+.form-ingredient-amount {
+    width: 100%;
+    height: 42px;
+    /* Fast exakt höjd */
+    padding: 0.75rem 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--color-surface);
+    font-family: var(--font-body);
+    font-size: 16px;
+    color: var(--font-color-primary);
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.form-ingredient-amount:focus {
+    border-color: var(--color-primary);
+}
+
+/* Snygga till select-dropdownen för enheter */
+.form-dynamic-row.ingredient-row select.form-ingredient-unit {
+    width: 100% !important;
+    height: 42px !important;
+    /* UPPDATERAD: Minskat padding från 0.75rem till 0.4rem på sidorna för att texten inte ska klippas */
+    padding: 0 1.5rem 0 0.4rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--color-surface);
+    font-family: var(--font-body);
+    font-size: 16px;
+    color: var(--font-color-primary);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238290a2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.4rem center;
+    /* Flyttat in pilen en aning */
+    background-size: 0.85rem;
+}
+
+/* Se till att även ingrediensnamnet håller exakt samma höjd */
+.form-dynamic-row.ingredient-row .form-ingredient-input {
+    height: 42px !important;
+}
+
+/* Behåll de dolda pilarna för nummerfältet */
+.form-ingredient-amount::-webkit-outer-spin-button,
+.form-ingredient-amount::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.form-ingredient-amount {
+    -moz-appearance: textfield;
+}
+
+/* Snygg förpackning för ingredienserna på receptkorten */
+.recipe-card-ingredients {
+    list-style-type: none;
+    padding-left: 0 !important;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg);
+    padding: 0.5rem 1rem !important;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.recipe-card-ingredients li {
+    font-size: 13px;
+    color: #475569;
+    display: flex;
+    align-items: center;
+}
+
+.recipe-card-ingredients li::before {
+    content: "•";
+    color: var(--color-primary);
+    font-weight: bold;
+    display: inline-block;
+    width: 1rem;
+}
+
+/* NYTT: Gör så att placeholder-alternativet i Enhet matchar de andra placeholders */
+.form-dynamic-row.ingredient-row select.form-ingredient-unit:invalid,
+.form-dynamic-row.ingredient-row select.form-ingredient-unit option[value=""] {
+    color: #757575;
+    /* Exakt samma ljusgrå färg som dina andra placeholders */
+}
+
+/* Se till att de RIKTIGA valen i listan blir mörka när man öppnar dropdownen */
+.form-dynamic-row.ingredient-row select.form-ingredient-unit option {
+    color: var(--font-color-primary);
 }
 
 /* ========================================

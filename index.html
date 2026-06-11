@@ -128,8 +128,27 @@
                 <div class="form-group">
                     <label>Ingredienser</label>
                     <div id="form-ingredients-list">
-                        <div class="form-dynamic-row">
-                            <input type="text" class="form-ingredient-input" required placeholder="T.ex. Ägg">
+                        <div class="form-dynamic-row ingredient-row">
+                            <input type="number" step="any" class="form-ingredient-amount" required placeholder="Mängd">
+
+                            <select class="form-ingredient-unit" required style="width: 100px;">
+                                <option value="" disabled selected>Enhet</option>
+                                <option value="st">st</option>
+                                <option value="g">g</option>
+                                <option value="kg">kg</option>
+                                <option value="dl">dl</option>
+                                <option value="l">l</option>
+                                <option value="msk">msk</option>
+                                <option value="tsk">tsk</option>
+                                <option value="krm">krm</option>
+                                <option value="klyftor">klyftor</option>
+                                <option value="burkar">burkar</option>
+                                <option value="nypa">nypa</option>
+                                <option value="efter smak">efter smak</option>
+                            </select>
+
+                            <input type="text" class="form-ingredient-input" required placeholder="Ingrediens">
+
                             <button type="button" class="form-row-remove-btn">&times;</button>
                         </div>
                     </div>
@@ -140,7 +159,7 @@
                 <div class="form-group">
                     <label>Instruktioner (steg för steg)</label>
                     <div id="form-steps-list">
-                        <div class="form-dynamic-row">
+                        <div class="form-dynamic-row ingredient-row">
                             <input type="text" class="form-step-input" required
                                 placeholder="Steg 1: T.ex. Blanda smeten">
                             <button type="button" class="form-row-remove-btn">&times;</button>
